@@ -2,8 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { prisma } from './db.js';
 import { authenticate, authorize } from './middleware/auth.js';
+
+// __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import authRouter from './routes/auth.js';
 import studentsRouter from './routes/students.js';
@@ -90,6 +96,17 @@ app.use('/api/dashboard', authenticate, dashboardRouter);
 app.use('/api/teaching-assignments', authenticate, authorize('admin', 'coordinator', 'homeroom', 'subject'), teachingAssignmentsRouter);
 app.use('/api/grade-boundaries', authenticate, authorize('admin', 'coordinator', 'student'), gradeBoundariesRouter);
 app.use('/api/grade-progress', authenticate, authorize('admin', 'coordinator', 'homeroom'), gradeProgressRouter);
+
+// ─── Production: Serve Frontend Static Files ────────────────────
+if (isProduction) {
+  const DIST_DIR = path.resolve(__dirname, '../../dist');
+  app.use(express.static(DIST_DIR));
+
+  // SPA fallback — all non-API GET requests serve index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
 // Error handler
 app.use((err, req, res, next) => {
