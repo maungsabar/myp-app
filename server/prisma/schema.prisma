@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── CORE ENTITIES ──────────────────────────────────────────────────
+
+model Student {
+  id          Int      @id @default(autoincrement())
+  nis         String   @unique @db.VarChar(20)
+  name        String   @db.VarChar(255)
+  class       String   @db.VarChar(10)
+  gender      String   @db.VarChar(1)
+  birthDate   String?  @db.VarChar(20)
+  parentEmail String?  @db.VarChar(255)
+  status      String   @default("active") @db.VarChar(10)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  grades           Grade[]
+  attendances      Attendance[]
+  homeroomComments HomeroomComment[]
+  academicYears    StudentAcademicYear[]
+
+  @@map("students")
+}
+
+model Teacher {
+  id        Int      @id @default(autoincrement())
+  nip       String   @unique @db.VarChar(30)
+  name      String   @db.VarChar(255)
+  role      String   @db.VarChar(10)
+  subject   String?  @db.VarChar(255)
+  homeroom  String?  @db.VarChar(10)
+  email     String?  @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  homeroomClasses    Class[]
+  teachingAssignments TeachingAssignment[]
+
+  @@map("teachers")
+}
+
+model Class {
+  id                Int    @id @default(autoincrement())
+  name              String @db.VarChar(10)
+  level             Int
+  suffix            String @db.VarChar(5)
+  homeroomTeacherId Int?
+  capacity          Int    @default(30)
+  academicYearId    Int?
+
+  homeroomTeacher Teacher?      @relation(fields: [homeroomTeacherId], references: [id], onDelete: SetNull)
+  academicYear    AcademicYear?  @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  @@unique([name, academicYearId])
+  @@map("classes")
+}
+
+model Subject {
+  id              Int    @id @default(autoincrement())
+  name            String @db.VarChar(255)
+  category        String @db.VarChar(100)
+  shortName       String @db.VarChar(100)
+  criteriaConfig  Json?
+  availableGrades Json?
+
+  grades              Grade[]
+  criteriaDescriptors CriteriaDescriptor[]
+  teachingAssignments TeachingAssignment[]
+
+  @@map("subjects")
+}
+
+// ─── TEACHING ASSIGNMENTS ───────────────────────────────────────────
+
+model TeachingAssignment {
+  id             Int      @id @default(autoincrement())
+  className      String   @db.VarChar(10)
+  subjectId      Int
+  teacherId      Int
+  academicYearId Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  subject      Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher      Teacher       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear? @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  @@unique([className, subjectId, teacherId, academicYearId])
+  @@map("teaching_assignments")
+}
+
+// ─── ACADEMIC DATA ──────────────────────────────────────────────────
+
+model Grade {
+  id           Int    @id @default(autoincrement())
+  studentId    Int
+  subjectId    Int
+  semester     Int
+  academicYear String @db.VarChar(20)
+  scoreA       Int    @default(0)
+  scoreB       Int    @default(0)
+  scoreC       Int    @default(0)
+  scoreD       Int    @default(0)
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, subjectId, semester, academicYear])
+  @@map("grades")
+}
+
+model Attendance {
+  id           Int    @id @default(autoincrement())
+  studentId    Int
+  semester     Int
+  academicYear String @db.VarChar(20)
+  present      Int    @default(0)
+  unexcused    Int    @default(0)
+  sick         Int    @default(0)
+  excused      Int    @default(0)
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, semester, academicYear])
+  @@map("attendances")
+}
+
+model HomeroomComment {
+  id           Int    @id @default(autoincrement())
+  studentId    Int
+  semester     Int
+  academicYear String @db.VarChar(20)
+  teacherName  String @default("") @db.VarChar(255)
+  comment      String @db.Text
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, semester, academicYear])
+  @@map("homeroom_comments")
+}
+
+// ─── CONFIGURATION ──────────────────────────────────────────────────
+
+model AcademicYear {
+  id             Int     @id @default(autoincrement())
+  year           String  @unique @db.VarChar(20)
+  activeSemester Int     @default(1)
+  isActive       Boolean @default(false)
+  semester1Name  String  @default("First Semester") @db.VarChar(50)
+  semester2Name  String  @default("Second Semester") @db.VarChar(50)
+
+  classes              Class[]
+  teachingAssignments  TeachingAssignment[]
+  studentAcademicYears StudentAcademicYear[]
+
+  @@map("academic_years")
+}
+
+model SchoolProfile {
+  id             Int     @id @default(1)
+  name           String  @default("") @db.VarChar(255)
+  address        String  @db.Text
+  phone          String  @default("") @db.VarChar(30)
+  email          String  @default("") @db.VarChar(255)
+  principal      String  @default("") @db.VarChar(255)
+  mypCoordinator String  @default("") @db.VarChar(255)
+  logo           String? @db.MediumText
+
+  @@map("school_profile")
+}
+
+// ─── USERS & ALUMNI ─────────────────────────────────────────────────
+
+model User {
+  id                Int     @id @default(autoincrement())
+  username          String  @unique @db.VarChar(100)
+  name              String  @db.VarChar(255)
+  role              String  @db.VarChar(20)
+  email             String? @db.VarChar(255)
+  lastLogin         String? @db.VarChar(20)
+  password          String? @db.VarChar(255)
+  isDefaultPassword Boolean @default(true)
+
+  @@map("users")
+}
+
+model Alumni {
+  id             Int    @id @default(autoincrement())
+  nis            String @db.VarChar(20)
+  name           String @db.VarChar(255)
+  class          String @db.VarChar(10)
+  graduationYear String @db.VarChar(20)
+  nextSchool     String @default("") @db.VarChar(255)
+
+  @@map("alumni")
+}
+
+// ─── DESCRIPTORS & PROFILES ────────────────────────────────────────
+
+model CriteriaDescriptor {
+  id          Int    @id @default(autoincrement())
+  subjectId   Int
+  gradeLevel  String @db.VarChar(5)
+  criteria    String @db.VarChar(1)
+  title       String @default("") @db.VarChar(255)
+  levels      Json   @default("{}")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, gradeLevel, criteria])
+  @@map("criteria_descriptors")
+}
+
+model LearnerProfile {
+  id          Int    @id @default(autoincrement())
+  order       Int    @unique
+  name        String @db.VarChar(100)
+  description String @db.Text
+
+  @@map("learner_profiles")
+}
+
+// ─── GRADE BOUNDARIES ──────────────────────────────────────────────
+
+model GradeBoundary {
+  id    Int    @id @default(autoincrement())
+  grade Int    @unique
+  min   Int
+  max   Int
+  label String @db.Text
+
+  @@map("grade_boundaries")
+}
+
+// ─── STUDENT ACADEMIC YEAR REGISTRATION ────────────────────────────
+
+model StudentAcademicYear {
+  id             Int    @id @default(autoincrement())
+  studentId      Int
+  academicYearId Int
+  className      String @db.VarChar(10)
+  status         String @default("active") @db.VarChar(10)
+
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, academicYearId])
+  @@map("student_academic_years")
+}
+
+// ─── APP SETTINGS (key-value store) ────────────────────────────────
+
+model AppSetting {
+  key   String @id @db.VarChar(100)
+  value Json?
+
+  @@map("app_settings")
+}
