@@ -1,34 +1,24 @@
 {
-  "name": "ib-app-temp",
+  "name": "ib-myp-monorepo",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "IB-MYP Report System — Production Monorepo",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "install:client": "cd client && npm install",
+    "install:server": "cd server && npm install",
+    "postinstall": "npm run install:client && npm run install:server",
+    "build": "cd client && npm run build",
     "start": "cd server && node src/index.js",
-    "postinstall": "cd server && npm install",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@tailwindcss/vite": "^4.3.1",
-    "@vitejs/plugin-react": "^6.0.1",
-    "lucide-react": "^1.20.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "react-router-dom": "^7.18.0",
-    "recharts": "^3.8.1",
-    "xlsx": "^0.18.5",
-    "vite": "^8.0.12"
+    "dev": "concurrently -n server,client -c blue,green \"cd server && npm run dev\" \"cd client && npm run dev\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "lint": "cd client && npm run lint",
+    "format": "echo \"No formatter configured\"",
+    "prisma:generate": "cd server && npx prisma generate",
+    "prisma:migrate": "cd server && npx prisma migrate deploy",
+    "seed": "cd server && npm run seed"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^10.3.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.6.0"
+    "concurrently": "^9.1.2"
   }
 }
