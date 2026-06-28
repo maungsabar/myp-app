@@ -32,7 +32,7 @@ import gradeBoundariesRouter from './routes/gradeBoundaries.js';
 import gradeProgressRouter from './routes/gradeProgress.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 
 // ─── Security Middleware ─────────────────────────────────────────
@@ -116,7 +116,7 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`IB-MYP API server running on http://localhost:${PORT}`);
+  console.log(`IB-MYP API server running on localhost:${PORT}`);
 });
 
 // Graceful shutdown
