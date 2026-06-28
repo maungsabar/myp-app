@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -33,29 +32,19 @@ import gradeBoundariesRouter from './routes/gradeBoundaries.js';
 import gradeProgressRouter from './routes/gradeProgress.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 
 // ─── Security Middleware ─────────────────────────────────────────
-// Order: helmet → compression → cors → json → urlencoded → routes → static → fallback → 404 → error
-
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false,
 }));
-
-app.use(compression());
 
 const corsOrigin = isProduction && process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(s => s.trim())
   : '*';
 app.use(cors({ origin: corsOrigin }));
 
-// Body parser
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Rate limiter
 const limiter = rateLimit({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
   max: Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000,
@@ -64,6 +53,9 @@ const limiter = rateLimit({
   message: { error: 'Terlalu banyak request. Coba lagi nanti.' },
 });
 app.use('/api/', limiter);
+
+// Body parser
+app.use(express.json({ limit: '10mb' }));
 
 // ─── Public Routes (no auth required) ───────────────────────────
 app.get('/api/health', (req, res) => {
@@ -105,21 +97,18 @@ app.use('/api/teaching-assignments', authenticate, authorize('admin', 'coordinat
 app.use('/api/grade-boundaries', authenticate, authorize('admin', 'coordinator', 'student'), gradeBoundariesRouter);
 app.use('/api/grade-progress', authenticate, authorize('admin', 'coordinator', 'homeroom'), gradeProgressRouter);
 
-// ─── API 404 — catch unmatched /api routes before static fallback ─
-app.use('/api', (req, res) => {
-  res.status(404).json({ error: `API endpoint not found: ${req.method} ${req.originalUrl}` });
-});
+// ─── Production: Serve Frontend Static Files ────────────────────
+if (isProduction) {
+  const DIST_DIR = path.resolve(__dirname, '../../dist');
+  app.use(express.static(DIST_DIR));
 
-// ─── Serve Frontend Static Files ────────────────────────────────
-const CLIENT_DIST = path.resolve(__dirname, '../../client/dist');
-app.use(express.static(CLIENT_DIST));
+  // SPA fallback — all non-API GET requests serve index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'));
+  });
+}
 
-// SPA fallback — all non-API GET requests serve index.html
-app.get('{*path}', (req, res) => {
-  res.sendFile(path.join(CLIENT_DIST, 'index.html'));
-});
-
-// ─── Error handler ──────────────────────────────────────────────
+// Error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
   res.status(500).json({ error: err.message || 'Internal server error' });
@@ -127,7 +116,7 @@ app.use((err, req, res, next) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`IB-MYP API server running on port ${PORT}`);
+  console.log(`IB-MYP API server running on http://localhost:${PORT}`);
 });
 
 // Graceful shutdown

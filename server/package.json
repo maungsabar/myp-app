@@ -8,12 +8,10 @@
     "postinstall": "prisma generate",
     "seed": "node prisma/seed.js",
     "db:push": "npx prisma db push",
-    "db:generate": "npx prisma generate",
-    "db:migrate": "npx prisma migrate deploy"
+    "db:generate": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.10.1",
-    "compression": "^1.8.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-rate-limit": "^8.5.2",
