@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    allowedHosts: ['myp.dnkapp.my.id'],
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -12,4 +13,7 @@ export default defineConfig({
       },
     },
   },
+  preview: {
+    allowedHosts: ['myp.dnkapp.my.id']
+  }
 })

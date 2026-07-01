@@ -115,8 +115,8 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`IB-MYP API server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`IB-MYP API server running on port ${PORT} and open to all network interfaces`);
 });
 
 // Graceful shutdown
