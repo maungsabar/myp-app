@@ -1,30 +1,78 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
 import { ArrowUpCircle, GraduationCap, CheckCircle2, AlertTriangle } from 'lucide-react';
 
-const ALL_CLASSES = ['7A', '7B', '8A', '8B', '9A', '9B'];
-
-const PROMOTION_MAP = {
-  '7A': '8A', '7B': '8B',
-  '8A': '9A', '8B': '9B',
-  '9A': null, '9B': null, // graduates
-};
-
 export default function PromoteClass() {
-  const { students, updateStudent, alumni, setAlumni, addAlumni, activeYear } = useApp();
-  const [sourceClass, setSourceClass] = useState('');
+  const { students, updateStudent, alumni, setAlumni, addAlumni, activeYear, academicYears, classes, selectedAcademicYearId } = useApp();
+  const [sourceClassId, setSourceClassId] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
-  const [targetClass, setTargetClass] = useState('');
+  const [targetClassId, setTargetClassId] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [targetClasses, setTargetClasses] = useState([]);
 
+  // Classes for the currently selected academic year (Kelas Asal)
+  const sourceClasses = useMemo(() => {
+    if (!selectedAcademicYearId) return [];
+    return classes
+      .filter(c => c.academicYearId === selectedAcademicYearId)
+      .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+  }, [classes, selectedAcademicYearId]);
+
+  // The selected source class object
+  const sourceClass = useMemo(() => {
+    if (!sourceClassId) return null;
+    return sourceClasses.find(c => c.id === Number(sourceClassId)) || null;
+  }, [sourceClasses, sourceClassId]);
+
+  // Determine the next academic year
+  const nextAcademicYear = useMemo(() => {
+    if (!selectedAcademicYearId || academicYears.length === 0) return null;
+    const currentYear = academicYears.find(y => y.id === selectedAcademicYearId);
+    if (!currentYear) return null;
+
+    // Academic year format: "2025/2026"
+    // Next year: "2026/2027"
+    const parts = currentYear.year.split('/');
+    if (parts.length === 2) {
+      const startYear = parseInt(parts[0], 10);
+      const endYear = parseInt(parts[1], 10);
+      const nextYearStr = `${startYear + 1}/${endYear + 1}`;
+      return academicYears.find(y => y.year === nextYearStr) || null;
+    }
+    return null;
+  }, [selectedAcademicYearId, academicYears]);
+
+  // When sourceClass changes, fetch target classes from next academic year with next grade level
+  useEffect(() => {
+    setTargetClassId('');
+    setTargetClasses([]);
+
+    if (!sourceClass || !nextAcademicYear) return;
+
+    const nextLevel = sourceClass.level + 1;
+
+    // Grade 9 has no next class (graduates)
+    if (nextLevel > 9) return;
+
+    // Fetch classes from the next academic year filtered by level
+    api.getClasses({ academicYearId: nextAcademicYear.id, level: nextLevel })
+      .then(data => {
+        const mapped = data.map(({ homeroomTeacher, ...rest }) => rest);
+        setTargetClasses(mapped.sort((a, b) => a.name.localeCompare(b.name)));
+      })
+      .catch(() => {
+        setTargetClasses([]);
+      });
+  }, [sourceClass, nextAcademicYear]);
+
+  const isGradeNine = sourceClass?.level === 9;
+
+  // Filter students by source class name and active status
   const classStudents = useMemo(
-    () => students.filter(s => s.class === sourceClass && s.status === 'active'),
+    () => students.filter(s => sourceClass && s.class === sourceClass.name && s.status === 'active'),
     [students, sourceClass]
   );
-
-  const isGradeNine = sourceClass.startsWith('9');
-  const nextClass = PROMOTION_MAP[sourceClass] || '';
 
   const toggleAll = (checked) => {
     setSelectedIds(checked ? classStudents.map(s => s.id) : []);
@@ -61,20 +109,32 @@ export default function PromoteClass() {
       }
       // Mark students as inactive
       graduating.forEach(s => updateStudent(s.id, { status: 'inactive' }));
-      setSuccessMsg(`${graduating.length} siswa kelas ${sourceClass} telah diluluskan dan dipindahkan ke data alumni.`);
+      setSuccessMsg(`${graduating.length} siswa kelas ${sourceClass.name} telah diluluskan dan dipindahkan ke data alumni.`);
     } else {
-      if (!targetClass) {
+      if (!targetClassId) {
         alert('Pilih kelas tujuan.');
         return;
       }
+      const target = targetClasses.find(c => c.id === Number(targetClassId));
+      if (!target) {
+        alert('Kelas tujuan tidak valid.');
+        return;
+      }
       const promoting = students.filter(s => selectedIds.includes(s.id));
-      promoting.forEach(s => updateStudent(s.id, { class: targetClass }));
-      setSuccessMsg(`${promoting.length} siswa berhasil dinaikkan dari ${sourceClass} ke ${targetClass}.`);
+      promoting.forEach(s => updateStudent(s.id, { class: target.name }));
+      setSuccessMsg(`${promoting.length} siswa berhasil dinaikkan dari ${sourceClass.name} ke ${target.name}.`);
     }
 
     setSelectedIds([]);
     setTimeout(() => setSuccessMsg(''), 5000);
   };
+
+  // Get the label for the current academic year
+  const currentYearLabel = useMemo(() => {
+    if (!selectedAcademicYearId || academicYears.length === 0) return '';
+    const y = academicYears.find(y => y.id === selectedAcademicYearId);
+    return y ? y.year : '';
+  }, [selectedAcademicYearId, academicYears]);
 
   return (
     <div className="space-y-6">
@@ -99,28 +159,36 @@ export default function PromoteClass() {
       <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-5">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Kelas Asal</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Kelas Asal {currentYearLabel && `(${currentYearLabel})`}</label>
             <select
-              value={sourceClass}
-              onChange={e => { setSourceClass(e.target.value); setSelectedIds([]); setTargetClass(''); }}
+              value={sourceClassId}
+              onChange={e => { setSourceClassId(e.target.value); setSelectedIds([]); setTargetClassId(''); }}
               className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
             >
               <option value="">-- Pilih Kelas --</option>
-              {ALL_CLASSES.map(c => <option key={c} value={c}>Kelas {c}</option>)}
+              {sourceClasses.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
             </select>
           </div>
 
           {!isGradeNine && sourceClass && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Naikkan ke Kelas</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Naikkan ke Kelas {nextAcademicYear ? `(${nextAcademicYear.year})` : ''}
+              </label>
               <select
-                value={targetClass}
-                onChange={e => setTargetClass(e.target.value)}
+                value={targetClassId}
+                onChange={e => setTargetClassId(e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
               >
                 <option value="">-- Pilih Kelas Tujuan --</option>
-                {ALL_CLASSES.filter(c => c !== sourceClass).map(c => <option key={c} value={c}>Kelas {c}</option>)}
+                {targetClasses.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
               </select>
+              {!nextAcademicYear && (
+                <p className="text-xs text-amber-600 mt-1">Tahun pelajaran berikutnya belum tersedia. Buat terlebih dahulu.</p>
+              )}
+              {nextAcademicYear && targetClasses.length === 0 && (
+                <p className="text-xs text-amber-600 mt-1">Tidak ada kelas grade {sourceClass.level + 1} di tahun pelajaran {nextAcademicYear.year}.</p>
+              )}
             </div>
           )}
 
@@ -152,7 +220,7 @@ export default function PromoteClass() {
         <div className="bg-white rounded-xl border border-warm-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-warm-200 flex items-center justify-between">
             <h3 className="text-base font-semibold text-primary-800">
-              Siswa Kelas {sourceClass} ({classStudents.length} siswa)
+              Siswa Kelas {sourceClass.name} ({classStudents.length} siswa)
             </h3>
             <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
               <input
