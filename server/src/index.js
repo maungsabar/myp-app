@@ -33,7 +33,6 @@ import gradeProgressRouter from './routes/gradeProgress.js';
 import backupRouter from './routes/backup.js';
 
 const app = express();
-app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 
