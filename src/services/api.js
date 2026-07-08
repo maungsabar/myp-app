@@ -179,6 +179,36 @@ const api = {
     request(`/teaching-assignments/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTeachingAssignment: (id) =>
     request(`/teaching-assignments/${id}`, { method: 'DELETE' }),
+
+  // ─── Backup & Restore ──────────────────────────────────────────────
+  createBackup: () => request('/backup/create', { method: 'POST' }),
+  getBackupList: () => request('/backup/list'),
+  deleteBackup: (filename) => request(`/backup/${encodeURIComponent(filename)}`, { method: 'DELETE' }),
+  downloadBackup: async (filename) => {
+    const headers = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE}/backup/download/${encodeURIComponent(filename)}`, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return res.blob();
+  },
+  restoreBackup: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers = {};
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE}/backup/restore`, { method: 'POST', headers, body: formData });
+    if (res.status === 401) {
+      clearAuthToken();
+      window.location.href = '/login';
+      throw new Error('Sesi berakhir, silakan login kembali.');
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    return data;
+  },
 };
 
 export default api;

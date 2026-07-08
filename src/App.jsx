@@ -24,6 +24,7 @@ import SchoolProfile from './pages/SchoolProfile';
 import IBLearnerProfile from './pages/IBLearnerProfile';
 import AcademicYear from './pages/AcademicYear';
 import UserManagement from './pages/UserManagement';
+import BackupRestore from './pages/BackupRestore';
 
 // Smart dashboard: admin sees full Dashboard, coordinator sees CoordinatorDashboard
 function SmartDashboard() {
@@ -59,6 +60,7 @@ function App() {
             <Route path="/pengaturan/profil-pembelajar-ib" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/profil-pembelajar-ib']}><IBLearnerProfile /></ProtectedRoute>} />
             <Route path="/pengaturan/tahun-pelajaran" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/tahun-pelajaran']}><AcademicYear /></ProtectedRoute>} />
             <Route path="/pengaturan/kelola-user" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/kelola-user']}><UserManagement /></ProtectedRoute>} />
+            <Route path="/pengaturan/backup" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/backup']}><BackupRestore /></ProtectedRoute>} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

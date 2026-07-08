@@ -91,7 +91,7 @@ export default function Dashboard() {
                 {schoolProfile.name || ''}
               </h1>
               <p className={`mt-1 text-primary-200 text-sm md:text-base transition-opacity duration-300 ${!schoolProfile.name ? 'opacity-0' : 'opacity-100'}`}>
-                Selamat datang di Sistem Informasi Akademik
+                Selamat datang di Sistem Informasi Rapor IB-MYP
               </p>
             </div>
             <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3">

@@ -1,4 +1,4 @@
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.3';
 
 export default function Footer() {
   const year = new Date().getFullYear();

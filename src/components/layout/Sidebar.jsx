@@ -5,7 +5,8 @@ import {
   LayoutDashboard, Users, GraduationCap, BookOpen, FileText,
   ClipboardList, UserCheck, Printer, Settings, ChevronDown,
   School, Calendar, UserCog, Landmark, FileSpreadsheet,
-  UserPlus, Archive, ScrollText, X, Layers, Award, BookOpenCheck, BarChart3
+  UserPlus, Archive, ScrollText, X, Layers, Award, BookOpenCheck, BarChart3,
+  HardDrive
 } from 'lucide-react';
 
 const navGroups = [
@@ -58,6 +59,7 @@ const navGroups = [
       { to: '/pengaturan/profil-pembelajar-ib', icon: Award, label: 'Profil Pembelajar IB' },
       { to: '/pengaturan/tahun-pelajaran', icon: Calendar, label: 'Tahun Pelajaran' },
       { to: '/pengaturan/kelola-user', icon: UserCog, label: 'Kelola User' },
+      { to: '/pengaturan/backup', icon: HardDrive, label: 'Backup & Restore' },
     ]
   },
 ];
