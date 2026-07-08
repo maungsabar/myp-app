@@ -30,8 +30,10 @@ import dashboardRouter from './routes/dashboard.js';
 import teachingAssignmentsRouter from './routes/teachingAssignments.js';
 import gradeBoundariesRouter from './routes/gradeBoundaries.js';
 import gradeProgressRouter from './routes/gradeProgress.js';
+import backupRouter from './routes/backup.js';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3001;
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -96,6 +98,7 @@ app.use('/api/dashboard', authenticate, dashboardRouter);
 app.use('/api/teaching-assignments', authenticate, authorize('admin', 'coordinator', 'homeroom', 'subject'), teachingAssignmentsRouter);
 app.use('/api/grade-boundaries', authenticate, authorize('admin', 'coordinator', 'student'), gradeBoundariesRouter);
 app.use('/api/grade-progress', authenticate, authorize('admin', 'coordinator', 'homeroom'), gradeProgressRouter);
+app.use('/api/backup', authenticate, authorize('admin'), backupRouter);
 
 // ─── Production: Serve Frontend Static Files ────────────────────
 if (isProduction) {
