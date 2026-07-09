@@ -54,6 +54,7 @@ const api = {
   createStudent: (data) => request('/students', { method: 'POST', body: JSON.stringify(data) }),
   updateStudent: (id, data) => request(`/students/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteStudent: (id) => request(`/students/${id}`, { method: 'DELETE' }),
+  bulkDeleteStudents: (ids) => request('/students/bulk-delete', { method: 'POST', body: JSON.stringify({ ids }) }),
   bulkImportStudents: (students) => request('/students/bulk', { method: 'POST', body: JSON.stringify({ students }) }),
 
   // ─── Teachers ──────────────────────────────────────────────────────
@@ -66,6 +67,7 @@ const api = {
   createTeacher: (data) => request('/teachers', { method: 'POST', body: JSON.stringify(data) }),
   updateTeacher: (id, data) => request(`/teachers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteTeacher: (id) => request(`/teachers/${id}`, { method: 'DELETE' }),
+  bulkDeleteTeachers: (ids) => request('/teachers/bulk-delete', { method: 'POST', body: JSON.stringify({ ids }) }),
   bulkImportTeachers: (teachers) => request('/teachers/bulk', { method: 'POST', body: JSON.stringify({ teachers }) }),
 
   // ─── Classes ───────────────────────────────────────────────────────
@@ -127,6 +129,7 @@ const api = {
   createUser: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
   updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+  bulkDeleteUsers: (ids) => request('/users/bulk-delete', { method: 'POST', body: JSON.stringify({ ids }) }),
   resetPassword: (id) => request(`/users/${id}/reset-password`, { method: 'PUT' }),
   changeUserPassword: (id, newPassword) =>
     request(`/users/${id}/change-password`, { method: 'PUT', body: JSON.stringify({ newPassword }) }),

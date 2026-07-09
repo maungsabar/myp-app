@@ -215,6 +215,15 @@ export function AppProvider({ children }) {
     }
   }, [safeApi]);
 
+  const bulkDeleteStudents = useCallback(async (ids) => {
+    const result = await safeApi(() => api.bulkDeleteStudents(ids), 'menghapus siswa massal');
+    if (result) {
+      const idSet = new Set(ids);
+      setStudents(prev => prev.filter(i => !idSet.has(i.id)));
+    }
+    return result;
+  }, [safeApi]);
+
   // Teachers
   const addTeacher = useCallback(async (item) => {
     const created = await safeApi(() => api.createTeacher(item), 'menambah guru');
@@ -237,6 +246,15 @@ export function AppProvider({ children }) {
     if (result) {
       setTeachers(prev => prev.filter(i => i.id !== id));
     }
+  }, [safeApi]);
+
+  const bulkDeleteTeachers = useCallback(async (ids) => {
+    const result = await safeApi(() => api.bulkDeleteTeachers(ids), 'menghapus guru massal');
+    if (result) {
+      const idSet = new Set(ids);
+      setTeachers(prev => prev.filter(i => !idSet.has(i.id)));
+    }
+    return result;
   }, [safeApi]);
 
   // Subjects
@@ -309,6 +327,15 @@ export function AppProvider({ children }) {
     if (result) {
       setUsers(prev => prev.filter(i => i.id !== id));
     }
+  }, [safeApi]);
+
+  const bulkDeleteUsers = useCallback(async (ids) => {
+    const result = await safeApi(() => api.bulkDeleteUsers(ids), 'menghapus user massal');
+    if (result) {
+      const idSet = new Set(ids);
+      setUsers(prev => prev.filter(i => !idSet.has(i.id)));
+    }
+    return result;
   }, [safeApi]);
 
   // Grades — upsert
@@ -428,9 +455,9 @@ export function AppProvider({ children }) {
       // Auth
       currentUser, isAuthenticated, authLoading, login, logout,
       // Students
-      students, addStudent, updateStudent, deleteStudent, setStudents,
+      students, addStudent, updateStudent, deleteStudent, bulkDeleteStudents, setStudents,
       // Teachers
-      teachers, addTeacher, updateTeacher, deleteTeacher,
+      teachers, addTeacher, updateTeacher, deleteTeacher, bulkDeleteTeachers,
       // Subjects
       subjects, addSubject, updateSubject, deleteSubject,
       // Grades
@@ -444,7 +471,7 @@ export function AppProvider({ children }) {
       // School Profile
       schoolProfile, setSchoolProfile: saveSchoolProfile,
       // Users
-      users, addUser, updateUser, deleteUser,
+      users, addUser, updateUser, deleteUser, bulkDeleteUsers,
       // Alumni
       alumni, setAlumni, addAlumni,
       // Classes

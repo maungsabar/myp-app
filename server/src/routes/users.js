@@ -133,6 +133,21 @@ router.put('/:id/change-password', async (req, res) => {
   }
 });
 
+// POST /api/users/bulk-delete — delete multiple users at once
+router.post('/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Expected non-empty array of ids' });
+    }
+    const numericIds = ids.map(Number).filter(n => !isNaN(n));
+    const result = await prisma.user.deleteMany({ where: { id: { in: numericIds } } });
+    res.json({ success: true, deletedCount: result.count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/users/:id
 router.delete('/:id', async (req, res) => {
   try {

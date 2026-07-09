@@ -132,6 +132,21 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// POST /api/students/bulk-delete — delete multiple students at once
+router.post('/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Expected non-empty array of ids' });
+    }
+    const numericIds = ids.map(Number).filter(n => !isNaN(n));
+    const result = await prisma.student.deleteMany({ where: { id: { in: numericIds } } });
+    res.json({ success: true, deletedCount: result.count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/students/:id
 router.delete('/:id', async (req, res) => {
   try {

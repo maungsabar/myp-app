@@ -4,7 +4,7 @@ import DataTable from '../components/shared/DataTable';
 import Modal from '../components/shared/Modal';
 import ConfirmDialog from '../components/shared/ConfirmDialog';
 import ImportModal from '../components/shared/ImportModal';
-import { UserPlus, FileDown } from 'lucide-react';
+import { UserPlus, FileDown, Trash2 } from 'lucide-react';
 
 const CLASS_OPTIONS = ['7A', '7B', '8A', '8B', '9A', '9B'];
 
@@ -13,12 +13,14 @@ const emptyForm = {
 };
 
 export default function Students() {
-  const { students, addStudent, updateStudent, deleteStudent, showToast } = useApp();
+  const { students, addStudent, updateStudent, deleteStudent, bulkDeleteStudents, showToast } = useApp();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
   const importColumns = [
     { key: 'nis', header: 'NISN', required: true, sample: '0112301194' },
@@ -119,6 +121,17 @@ export default function Students() {
         data={students}
         onEdit={openEdit}
         onDelete={(row) => setDeleteConfirm(row)}
+        selectable
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        bulkActions={
+          <button
+            onClick={() => setBulkDeleteConfirm(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 border border-red-200"
+          >
+            <Trash2 size={14} /> Hapus yang Dipilih
+          </button>
+        }
         actions={
           <div className="flex items-center gap-2">
             <button onClick={() => setImportOpen(true)} className="px-4 py-2 text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition-all duration-200 flex items-center gap-2">
@@ -192,6 +205,24 @@ export default function Students() {
         title="Hapus Siswa"
         message={`Hapus siswa "${deleteConfirm?.name}"?`}
         confirmText="Ya, Hapus"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={bulkDeleteConfirm}
+        onClose={() => setBulkDeleteConfirm(false)}
+        onConfirm={async () => {
+          const ids = Array.from(selectedIds);
+          const result = await bulkDeleteStudents(ids);
+          if (result) {
+            showToast('success', `${result.deletedCount} siswa berhasil dihapus.`);
+            setSelectedIds(new Set());
+          }
+          setBulkDeleteConfirm(false);
+        }}
+        title="Hapus Massal Siswa"
+        message={`Anda yakin ingin menghapus ${selectedIds.size} siswa yang dipilih? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Ya, Hapus Semua"
         variant="danger"
       />
 

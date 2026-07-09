@@ -138,6 +138,21 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// POST /api/teachers/bulk-delete — delete multiple teachers at once
+router.post('/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Expected non-empty array of ids' });
+    }
+    const numericIds = ids.map(Number).filter(n => !isNaN(n));
+    const result = await prisma.teacher.deleteMany({ where: { id: { in: numericIds } } });
+    res.json({ success: true, deletedCount: result.count });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.delete('/:id', async (req, res) => {
   try {
     await prisma.teacher.delete({ where: { id: Number(req.params.id) } });

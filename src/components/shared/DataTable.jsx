@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 
 const ENTRIES_OPTIONS = [10, 25, 50, 100];
 
-export default function DataTable({ columns, data, onEdit, onDelete, onView, title, actions }) {
+export default function DataTable({ columns, data, onEdit, onDelete, onView, title, actions, selectable = false, selectedIds, onSelectionChange, bulkActions }) {
   const [search, setSearch] = useState('');
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
@@ -69,6 +69,32 @@ export default function DataTable({ columns, data, onEdit, onDelete, onView, tit
     return pages;
   }, [totalPages, safePage]);
 
+  // Selection helpers (only when selectable)
+  const pageIds = useMemo(() => paginatedData.map(row => row.id), [paginatedData]);
+  const allPageSelected = selectable && pageIds.length > 0 && pageIds.every(id => selectedIds?.has(id));
+  const somePageSelected = selectable && pageIds.some(id => selectedIds?.has(id));
+
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedIds);
+    if (allPageSelected) {
+      pageIds.forEach(id => next.delete(id));
+    } else {
+      pageIds.forEach(id => next.add(id));
+    }
+    onSelectionChange(next);
+  };
+
+  const handleSelectRow = (id) => {
+    if (!onSelectionChange) return;
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onSelectionChange(next);
+  };
+
+  const totalColSpan = columns.length + (selectable ? 1 : 0) + ((onEdit || onDelete || onView) ? 1 : 0);
+
   return (
     <div className="bg-white rounded-xl border border-warm-200 shadow-sm overflow-hidden">
       {/* Toolbar */}
@@ -89,11 +115,32 @@ export default function DataTable({ columns, data, onEdit, onDelete, onView, tit
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectable && selectedIds?.size > 0 && (
+        <div className="px-5 py-2.5 bg-primary-50 border-b border-primary-100 flex items-center gap-3">
+          <span className="text-sm font-medium text-primary-700">
+            {selectedIds.size} data dipilih
+          </span>
+          {bulkActions}
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-warm-50">
+              {selectable && (
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allPageSelected}
+                    ref={el => { if (el) el.indeterminate = somePageSelected && !allPageSelected; }}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                  />
+                </th>
+              )}
               {columns.map(col => (
                 <th
                   key={col.key}
@@ -112,9 +159,19 @@ export default function DataTable({ columns, data, onEdit, onDelete, onView, tit
           </thead>
           <tbody className="divide-y divide-warm-100">
             {paginatedData.length === 0 ? (
-              <tr><td colSpan={columns.length + 1} className="px-4 py-12 text-center text-gray-400">Tidak ada data</td></tr>
+              <tr><td colSpan={totalColSpan} className="px-4 py-12 text-center text-gray-400">Tidak ada data</td></tr>
             ) : paginatedData.map((row, idx) => (
-              <tr key={row.id || idx} className="hover:bg-warm-50/50 transition-colors duration-150">
+              <tr key={row.id || idx} className={`hover:bg-warm-50/50 transition-colors duration-150 ${selectable && selectedIds?.has(row.id) ? 'bg-primary-50/40' : ''}`}>
+                {selectable && (
+                  <td className="px-4 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds?.has(row.id) || false}
+                      onChange={() => handleSelectRow(row.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                    />
+                  </td>
+                )}
                 {columns.map(col => (
                   <td key={col.key} className="px-4 py-3 text-gray-700 whitespace-nowrap">
                     {col.render ? col.render(row[col.key], row) : row[col.key]}

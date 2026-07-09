@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
-import { Plus, Key, Shield, GraduationCap, UserCircle, RotateCcw, Eye, EyeOff, Download } from 'lucide-react';
+import { Plus, Key, Shield, GraduationCap, UserCircle, RotateCcw, Eye, EyeOff, Download, Trash2 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import DataTable from '../components/shared/DataTable';
 import Modal from '../components/shared/Modal';
@@ -24,7 +24,7 @@ const DEFAULT_PASSWORDS = {
 };
 
 export default function UserManagement() {
-  const { users, setUsers, addUser, updateUser, deleteUser, showToast } = useApp();
+  const { users, setUsers, addUser, updateUser, deleteUser, bulkDeleteUsers, showToast } = useApp();
   const [activeTab, setActiveTab] = useState('admin');
   const [showModal, setShowModal] = useState(false);
   const [editUser, setEditUser] = useState(null);
@@ -32,6 +32,8 @@ export default function UserManagement() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [resetConfirm, setResetConfirm] = useState(null);
   const [showPasswords, setShowPasswords] = useState({});
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
   // Refresh users from API on mount (to pick up auto-created users from teacher/student)
   useEffect(() => {
@@ -169,7 +171,7 @@ export default function UserManagement() {
       {/* Tabs */}
       <div className="flex gap-1 mb-5 bg-warm-100 p-1 rounded-xl w-fit">
         {tabs.map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+          <button key={tab.key} onClick={() => { setActiveTab(tab.key); setSelectedIds(new Set()); }}
             className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200
               ${activeTab === tab.key ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
             <tab.icon size={16} />
@@ -184,6 +186,17 @@ export default function UserManagement() {
         data={filteredUsers}
         onEdit={openEdit}
         onDelete={handleDelete}
+        selectable
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        bulkActions={
+          <button
+            onClick={() => setBulkDeleteConfirm(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 border border-red-200"
+          >
+            <Trash2 size={14} /> Hapus yang Dipilih
+          </button>
+        }
         actions={
           <div className="flex gap-2">
             {showDownload && (
@@ -265,6 +278,25 @@ export default function UserManagement() {
         title="Hapus User"
         message={`Hapus user "${deleteConfirm?.name}"?`}
         confirmText="Ya, Hapus"
+        variant="danger"
+      />
+
+      {/* Bulk Delete Confirm */}
+      <ConfirmDialog
+        isOpen={bulkDeleteConfirm}
+        onClose={() => setBulkDeleteConfirm(false)}
+        onConfirm={async () => {
+          const ids = Array.from(selectedIds);
+          const result = await bulkDeleteUsers(ids);
+          if (result) {
+            showToast('success', `${result.deletedCount} user berhasil dihapus.`);
+            setSelectedIds(new Set());
+          }
+          setBulkDeleteConfirm(false);
+        }}
+        title="Hapus Massal User"
+        message={`Anda yakin ingin menghapus ${selectedIds.size} user yang dipilih? Tindakan ini tidak dapat dibatalkan.`}
+        confirmText="Ya, Hapus Semua"
         variant="danger"
       />
     </div>
