@@ -1,17 +1,47 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
-import { ArrowUpCircle, GraduationCap, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ArrowUpCircle, GraduationCap, CheckCircle2, AlertTriangle, ChevronRight } from 'lucide-react';
+
+// Tooltip peringatan — muncul saat hover ikon ⚠, tidak mempengaruhi tinggi kolom grid
+function WarningTooltip({ msg }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef(null);
+
+  return (
+    <span
+      ref={ref}
+      className="relative inline-flex items-center"
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      <AlertTriangle size={13} className="text-amber-500 cursor-help shrink-0" />
+      {visible && (
+        <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-60 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700 shadow-lg">
+          {msg}
+          {/* Panah ke bawah */}
+          <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-amber-200" />
+        </span>
+      )}
+    </span>
+  );
+}
 
 export default function PromoteClass() {
   const { students, updateStudent, alumni, setAlumni, addAlumni, activeYear, academicYears, classes, selectedAcademicYearId } = useApp();
+
+  // ─── Step 1: Grade selection ───────────────────────────────────────
+  const [selectedGrade, setSelectedGrade] = useState('');
+  // ─── Step 2: Class selection ───────────────────────────────────────
   const [sourceClassId, setSourceClassId] = useState('');
-  const [selectedIds, setSelectedIds] = useState([]);
+  // ─── Step 3: Target class selection ───────────────────────────────
   const [targetClassId, setTargetClassId] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [targetClasses, setTargetClasses] = useState([]);
 
-  // Classes for the currently selected academic year (Kelas Asal)
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // All classes for the currently selected academic year
   const sourceClasses = useMemo(() => {
     if (!selectedAcademicYearId) return [];
     return classes
@@ -19,11 +49,23 @@ export default function PromoteClass() {
       .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
   }, [classes, selectedAcademicYearId]);
 
+  // Unique sorted list of grades available in this academic year
+  const availableGrades = useMemo(() => {
+    const levels = [...new Set(sourceClasses.map(c => c.level))].sort((a, b) => a - b);
+    return levels;
+  }, [sourceClasses]);
+
+  // Classes belonging to the selected grade
+  const filteredSourceClasses = useMemo(() => {
+    if (!selectedGrade) return [];
+    return sourceClasses.filter(c => c.level === Number(selectedGrade));
+  }, [sourceClasses, selectedGrade]);
+
   // The selected source class object
   const sourceClass = useMemo(() => {
     if (!sourceClassId) return null;
-    return sourceClasses.find(c => c.id === Number(sourceClassId)) || null;
-  }, [sourceClasses, sourceClassId]);
+    return filteredSourceClasses.find(c => c.id === Number(sourceClassId)) || null;
+  }, [filteredSourceClasses, sourceClassId]);
 
   // Determine the next academic year
   const nextAcademicYear = useMemo(() => {
@@ -42,6 +84,22 @@ export default function PromoteClass() {
     }
     return null;
   }, [selectedAcademicYearId, academicYears]);
+
+  // ─── Cascade reset: when grade changes, reset class & target ───────
+  const handleGradeChange = (grade) => {
+    setSelectedGrade(grade);
+    setSourceClassId('');
+    setSelectedIds([]);
+    setTargetClassId('');
+    setTargetClasses([]);
+  };
+
+  // ─── Cascade reset: when source class changes, reset target ────────
+  const handleSourceClassChange = (classId) => {
+    setSourceClassId(classId);
+    setSelectedIds([]);
+    setTargetClassId('');
+  };
 
   // When sourceClass changes, fetch target classes from next academic year with next grade level
   useEffect(() => {
@@ -82,6 +140,7 @@ export default function PromoteClass() {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
+  // ─── Business logic: UNCHANGED ────────────────────────────────────
   const handlePromote = async () => {
     if (selectedIds.length === 0) {
       alert('Pilih minimal satu siswa.');
@@ -144,7 +203,7 @@ export default function PromoteClass() {
           <ArrowUpCircle size={20} className="text-primary-600" />
           Kenaikan Kelas
         </h2>
-        <p className="text-sm text-gray-500">Pilih kelas asal, pilih siswa, lalu naikkan atau luluskan.</p>
+        <p className="text-sm text-gray-500">Pilih grade, lalu kelas asal, pilih siswa, lalu naikkan atau luluskan.</p>
       </div>
 
       {/* Success message */}
@@ -155,51 +214,113 @@ export default function PromoteClass() {
         </div>
       )}
 
-      {/* Controls */}
+      {/* Controls — Cascading Filter */}
       <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-5">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+
+        {/* Step indicators */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${selectedGrade ? 'bg-primary-600 text-white' : 'bg-warm-200 text-gray-500'}`}>1</span>
+          <span className="text-xs font-medium text-gray-500">Pilih Grade</span>
+          <ChevronRight size={14} className="text-warm-300" />
+          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${sourceClassId ? 'bg-primary-600 text-white' : 'bg-warm-200 text-gray-500'}`}>2</span>
+          <span className="text-xs font-medium text-gray-500">Pilih Kelas</span>
+          <ChevronRight size={14} className="text-warm-300" />
+          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${sourceClass && !isGradeNine ? (targetClassId ? 'bg-primary-600 text-white' : 'bg-warm-200 text-gray-500') : (sourceClass && isGradeNine ? 'bg-gold-500 text-white' : 'bg-warm-200 text-gray-500')}`}>3</span>
+          <span className="text-xs font-medium text-gray-500">{isGradeNine ? 'Luluskan' : 'Naik ke Kelas'}</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+
+          {/* Step 1: Pilih Grade */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Kelas Asal {currentYearLabel && `(${currentYearLabel})`}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Grade {currentYearLabel && <span className="text-gray-400 font-normal">({currentYearLabel})</span>}
+            </label>
             <select
-              value={sourceClassId}
-              onChange={e => { setSourceClassId(e.target.value); setSelectedIds([]); setTargetClassId(''); }}
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
+              value={selectedGrade}
+              onChange={e => handleGradeChange(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
             >
-              <option value="">-- Pilih Kelas --</option>
-              {sourceClasses.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
+              <option value="">-- Pilih Grade --</option>
+              {availableGrades.map(level => (
+                <option key={level} value={level}>Grade {level}</option>
+              ))}
             </select>
           </div>
 
+          {/* Step 2: Pilih Kelas Asal */}
+          <div>
+            <label className={`flex items-center gap-1 text-sm font-medium mb-1 ${selectedGrade ? 'text-gray-700' : 'text-gray-400'}`}>
+              Kelas Asal
+              {selectedGrade && <span className="text-gray-400 font-normal"> (Grade {selectedGrade})</span>}
+              {selectedGrade && filteredSourceClasses.length === 0 && (
+                <WarningTooltip msg={`Tidak ada kelas di Grade ${selectedGrade} pada tahun ajaran ini.`} />
+              )}
+            </label>
+            <select
+              value={sourceClassId}
+              onChange={e => handleSourceClassChange(e.target.value)}
+              disabled={!selectedGrade}
+              className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 transition-colors ${
+                selectedGrade
+                  ? 'border-warm-200 bg-white text-gray-800 cursor-pointer'
+                  : 'border-warm-100 bg-warm-50 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              <option value="">-- Pilih Kelas --</option>
+              {filteredSourceClasses.map(c => (
+                <option key={c.id} value={c.id}>Kelas {c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Step 3a: Naik ke Kelas (non-grade 9) */}
           {!isGradeNine && sourceClass && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Naikkan ke Kelas {nextAcademicYear ? `(${nextAcademicYear.year})` : ''}
+              <label className="flex items-center gap-1 text-sm font-medium text-gray-700 mb-1">
+                Naik ke Kelas
+                {nextAcademicYear
+                  ? <span className="text-gray-400 font-normal"> ({nextAcademicYear.year})</span>
+                  : <span className="text-gray-400 font-normal"> (tahun berikutnya)</span>
+                }
+                {!nextAcademicYear && (
+                  <WarningTooltip msg="Tahun pelajaran berikutnya belum tersedia. Silakan buat tahun ajaran baru terlebih dahulu." />
+                )}
+                {nextAcademicYear && targetClasses.length === 0 && (
+                  <WarningTooltip msg={`Tidak ada kelas Grade ${sourceClass.level + 1} di tahun ajaran ${nextAcademicYear.year}.`} />
+                )}
               </label>
               <select
                 value={targetClassId}
                 onChange={e => setTargetClassId(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 bg-white"
               >
                 <option value="">-- Pilih Kelas Tujuan --</option>
-                {targetClasses.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
+                {targetClasses.map(c => (
+                  <option key={c.id} value={c.id}>Kelas {c.name}</option>
+                ))}
               </select>
-              {!nextAcademicYear && (
-                <p className="text-xs text-amber-600 mt-1">Tahun pelajaran berikutnya belum tersedia. Buat terlebih dahulu.</p>
-              )}
-              {nextAcademicYear && targetClasses.length === 0 && (
-                <p className="text-xs text-amber-600 mt-1">Tidak ada kelas grade {sourceClass.level + 1} di tahun pelajaran {nextAcademicYear.year}.</p>
-              )}
             </div>
           )}
 
+          {/* Step 3b: Spacer when grade 9 (no target class dropdown needed) */}
+          {isGradeNine && sourceClass && <div />}
+
+          {/* Action button */}
           {sourceClass && (
             <div>
               {isGradeNine ? (
-                <button onClick={handlePromote} className="px-4 py-2 text-sm font-medium text-white bg-gold-500 hover:bg-gold-400 rounded-lg transition-all duration-200 flex items-center gap-2 w-full justify-center">
+                <button
+                  onClick={handlePromote}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gold-500 hover:bg-gold-400 rounded-lg transition-all duration-200 flex items-center gap-2 w-full justify-center"
+                >
                   <GraduationCap size={16} /> Luluskan ({selectedIds.length})
                 </button>
               ) : (
-                <button onClick={handlePromote} className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all duration-200 flex items-center gap-2 w-full justify-center">
+                <button
+                  onClick={handlePromote}
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all duration-200 flex items-center gap-2 w-full justify-center"
+                >
                   <ArrowUpCircle size={16} /> Naikkan ({selectedIds.length})
                 </button>
               )}
