@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import DataTable from '../components/shared/DataTable';
 import Modal from '../components/shared/Modal';
@@ -6,14 +6,22 @@ import ConfirmDialog from '../components/shared/ConfirmDialog';
 import ImportModal from '../components/shared/ImportModal';
 import { UserPlus, FileDown, Trash2 } from 'lucide-react';
 
-const CLASS_OPTIONS = ['7A', '7B', '8A', '8B', '9A', '9B'];
-
 const emptyForm = {
-  nis: '', name: '', class: '7A', gender: 'L', birthDate: '', parentEmail: '', status: 'active',
+  nis: '', name: '', class: '', gender: 'L', birthDate: '', parentEmail: '', status: 'active',
 };
 
 export default function Students() {
-  const { students, addStudent, updateStudent, deleteStudent, bulkDeleteStudents, showToast } = useApp();
+  const { students, addStudent, updateStudent, deleteStudent, bulkDeleteStudents, showToast, classes, selectedAcademicYearId } = useApp();
+
+  // Daftar nama kelas dinamis dari database, diurutkan berdasarkan level lalu nama
+  const classNames = useMemo(() => {
+    const filtered = selectedAcademicYearId
+      ? classes.filter(c => c.academicYearId === selectedAcademicYearId)
+      : classes;
+    return filtered
+      .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
+      .map(c => c.name);
+  }, [classes, selectedAcademicYearId]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ ...emptyForm });
@@ -22,15 +30,23 @@ export default function Students() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
 
-  const importColumns = [
+  const importColumns = useMemo(() => [
     { key: 'nis', header: 'NISN', required: true, sample: '0112301194' },
     { key: 'name', header: 'Nama Lengkap', required: true, sample: 'Ahmad Fauzi' },
-    { key: 'class', header: 'Kelas', required: true, sample: '7A', validate: (v) => CLASS_OPTIONS.includes(v), transform: (v) => v?.toUpperCase() },
+    {
+      key: 'class',
+      header: 'Kelas',
+      required: true,
+      sample: classNames[0] || '7A',
+      // Validasi dinamis: terima kelas apapun yang ada di database (case-insensitive)
+      validate: (v) => classNames.length === 0 || classNames.map(n => n.toUpperCase()).includes(v?.toUpperCase()),
+      transform: (v) => v?.toUpperCase(),
+    },
     { key: 'gender', header: 'Gender', required: true, sample: 'L', validate: (v) => ['L', 'P'].includes(v?.toUpperCase()), transform: (v) => v?.toUpperCase() },
     { key: 'birthDate', header: 'Tanggal Lahir', sample: '2012-05-15', transform: (v) => v || '' },
     { key: 'parentEmail', header: 'Email Orang Tua', sample: 'parent@email.com', validate: (v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), transform: (v) => v || '' },
     { key: 'status', header: 'Status', sample: 'active', validate: (v) => ['active', 'inactive'].includes(v?.toLowerCase()), transform: (v) => v?.toLowerCase() || 'active' },
-  ];
+  ], [classNames]);
 
   const handleImport = async (rows) => {
     let successCount = 0;
@@ -157,7 +173,8 @@ export default function Students() {
           <div>
             <label className={labelCls}>Kelas</label>
             <select className={inputCls} value={form.class} onChange={e => setForm(f => ({ ...f, class: e.target.value }))}>
-              {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">-- Pilih Kelas --</option>
+              {classNames.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>

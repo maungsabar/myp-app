@@ -6,8 +6,6 @@ import {
   FileCheck, AlertCircle, CheckCircle2, ClipboardList, MessageSquareText, BookOpen,
 } from 'lucide-react';
 
-const CLASS_OPTIONS = ['7A', '7B', '8A', '8B', '9A', '9B'];
-
 const ATTENDANCE_FIELDS = [
   { key: 'present', label: 'Present', icon: UserCheck, color: 'text-emerald-600', bg: 'bg-emerald-50', ring: 'focus:ring-emerald-400' },
   { key: 'unexcused', label: 'Unexcused', icon: UserX, color: 'text-red-500', bg: 'bg-red-50', ring: 'focus:ring-red-400' },
@@ -20,7 +18,18 @@ export default function Attendance() {
     students, attendances, homeroomComments, activeYear,
     upsertAttendance, updateAttendance, upsertHomeroomComment, updateHomeroomComment,
     teachers, learnerProfiles, getSemesterLabel, currentUser,
+    classes, selectedAcademicYearId,
   } = useApp();
+
+  // Daftar nama kelas dinamis dari database
+  const classNames = useMemo(() => {
+    const filtered = selectedAcademicYearId
+      ? classes.filter(c => c.academicYearId === selectedAcademicYearId)
+      : classes;
+    return filtered
+      .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name))
+      .map(c => c.name);
+  }, [classes, selectedAcademicYearId]);
 
   const activeYearStr = activeYear?.year || '2025/2026';
   const activeSemester = activeYear?.activeSemester || 2;
@@ -233,7 +242,7 @@ export default function Attendance() {
                 {currentUser?.role === 'homeroom' && myHomeroomClass ? (
                   <option key={myHomeroomClass} value={myHomeroomClass}>{myHomeroomClass}</option>
                 ) : (
-                  CLASS_OPTIONS.map(cls => (
+                  classNames.map(cls => (
                     <option key={cls} value={cls}>{cls}</option>
                   ))
                 )}
