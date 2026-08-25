@@ -5,7 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    allowedHosts: ['ib-myp.milbos.net'],
+    // Menambahkan domain untuk mode development (npm run dev)
+    allowedHosts: [
+      'ib-myp.milbos.net'
+    ],
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -14,6 +17,9 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: ['ib-myp.milbos.net']
+    // Menambahkan domain untuk mode preview hasil build (npm run preview)
+    allowedHosts: [
+      'ib-myp.milbos.net'
+    ]
   }
 })
