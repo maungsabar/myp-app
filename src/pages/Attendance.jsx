@@ -35,7 +35,7 @@ export default function Attendance() {
   const activeSemester = activeYear?.activeSemester || 2;
 
   const [myHomeroomClass, setMyHomeroomClass] = useState(null);
-  const [selectedClass, setSelectedClass] = useState('8A');
+  const [selectedClass, setSelectedClass] = useState('');
   const [selectedYear] = useState(activeYearStr);
   const [selectedSemester] = useState(activeSemester);
   const [localEdits, setLocalEdits] = useState({});
@@ -232,23 +232,31 @@ export default function Attendance() {
         <div className="flex flex-col sm:flex-row sm:items-end gap-3">
           <div className="flex-1 max-w-xs">
             <label className="block text-xs font-medium text-gray-500 mb-1">Kelas</label>
-            <div className="relative">
-              <select
-                value={selectedClass}
-                onChange={e => { setSelectedClass(e.target.value); setLocalEdits({}); setCommentEdits({}); }}
-                disabled={currentUser?.role === 'homeroom'}
-                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8 disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {currentUser?.role === 'homeroom' && myHomeroomClass ? (
-                  <option key={myHomeroomClass} value={myHomeroomClass}>{myHomeroomClass}</option>
-                ) : (
-                  classNames.map(cls => (
+            {currentUser?.role === 'homeroom' ? (
+              // Wali kelas: tampilkan badge kelas terkunci (ditetapkan admin, tidak bisa diubah)
+              <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 border border-primary-200 rounded-lg">
+                <BookOpen size={14} className="text-primary-500 shrink-0" />
+                <span className="text-sm font-semibold text-primary-700">
+                  {myHomeroomClass || 'Memuat...'}
+                </span>
+                <span className="ml-auto text-[10px] text-primary-400 font-medium">Wali Kelas</span>
+              </div>
+            ) : (
+              // Admin/koordinator: dropdown semua kelas
+              <div className="relative">
+                <select
+                  value={selectedClass}
+                  onChange={e => { setSelectedClass(e.target.value); setLocalEdits({}); setCommentEdits({}); }}
+                  className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8"
+                >
+                  <option value="">-- Pilih Kelas --</option>
+                  {classNames.map(cls => (
                     <option key={cls} value={cls}>{cls}</option>
-                  ))
-                )}
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-4 text-xs text-gray-500">

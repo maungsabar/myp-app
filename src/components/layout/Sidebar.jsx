@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
+import api from '../../services/api';
 import {
   LayoutDashboard, Users, GraduationCap, BookOpen, FileText,
   ClipboardList, UserCheck, Printer, Settings, ChevronDown,
@@ -82,14 +83,14 @@ function filterNavGroups(groups, role) {
     items: group.items
       .map(item => {
         if (item.children) {
-          // Filter children
-          const filteredChildren = item.children.filter(child =>
-            allowed.some(path => child.to === path || child.to.startsWith(path + '/'))
-          );
+          const filteredChildren = item.children.filter(child => {
+            // Strip query params before checking allowed paths
+            const childPath = child.to.split('?')[0];
+            return allowed.some(path => childPath === path || childPath.startsWith(path + '/'));
+          });
           if (filteredChildren.length === 0) return null;
           return { ...item, children: filteredChildren };
         }
-        // Flat item
         const isAllowed = allowed.some(path => item.to === path || item.to.startsWith(path + '/'));
         return isAllowed ? item : null;
       })
@@ -101,19 +102,28 @@ function NavItem({ item, onNavigate }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const hasChildren = item.children && item.children.length > 0;
+
+  // Check if a child link is active — correctly handles query-param URLs like ?kelas=7A
+  const isChildActive = useCallback((childTo) => {
+    const [childPath, childQuery] = childTo.split('?');
+    if (childQuery) {
+      return location.pathname === childPath && location.search === `?${childQuery}`;
+    }
+    return location.pathname === childTo;
+  }, [location.pathname, location.search]);
+
   const isActive = hasChildren
-    ? item.children.some(c => location.pathname === c.to)
+    ? item.children.some(c => isChildActive(c.to))
     : location.pathname === item.to;
 
-  // Auto-close submenu when navigating outside its children
+  // Auto-open submenu when a child is active; auto-close when navigating away
   useEffect(() => {
-    if (hasChildren) {
-      const isChildActive = item.children.some(c => location.pathname === c.to);
-      if (!isChildActive) setOpen(false);
-    }
-  }, [location.pathname]);
+    if (!hasChildren) return;
+    const anyChildActive = item.children.some(c => isChildActive(c.to));
+    if (anyChildActive) setOpen(true);
+    else setOpen(false);
+  }, [location.pathname, location.search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Only close sidebar on navigate for mobile
   const handleNavClick = () => {
     if (window.innerWidth < 1024 && onNavigate) onNavigate();
   };
@@ -132,21 +142,21 @@ function NavItem({ item, onNavigate }) {
         </button>
         {open && (
           <div className="ml-5 mt-1 space-y-0.5 border-l-2 border-primary-200 pl-3">
-            {item.children.map(child => (
-              <NavLink
-                key={child.to}
-                to={child.to}
-                end
-                onClick={handleNavClick}
-                className={({ isActive }) =>
-                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200
-                  ${isActive ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 hover:bg-warm-100 hover:text-primary-700'}`
-                }
-              >
-                <child.icon size={14} className="shrink-0 opacity-60" />
-                {child.label}
-              </NavLink>
-            ))}
+            {item.children.map(child => {
+              const active = isChildActive(child.to);
+              return (
+                <NavLink
+                  key={child.to}
+                  to={child.to}
+                  onClick={handleNavClick}
+                  className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200
+                    ${active ? 'bg-primary-600 text-white shadow-sm' : 'text-gray-500 hover:bg-warm-100 hover:text-primary-700'}`}
+                >
+                  <child.icon size={14} className="shrink-0 opacity-60" />
+                  {child.label}
+                </NavLink>
+              );
+            })}
           </div>
         )}
       </div>
@@ -171,11 +181,55 @@ function NavItem({ item, onNavigate }) {
 
 export default function Sidebar({ isOpen, onClose }) {
   const { schoolProfile, currentUser } = useApp();
+  const [myTeacherClasses, setMyTeacherClasses] = useState([]);
+
+  // For subject/homeroom teachers: fetch their assigned classes to build dynamic submenus
+  useEffect(() => {
+    const isTeacher = currentUser?.role === 'subject' || currentUser?.role === 'homeroom';
+    if (!isTeacher || !currentUser?.name) {
+      setMyTeacherClasses([]);
+      return;
+    }
+    api.getTeachingAssignments()
+      .then(data => {
+        const mine = data.filter(a => a.teacher?.name === currentUser.name);
+        // Unique, sorted class names this teacher is assigned to
+        const uniqueClasses = [...new Set(mine.map(a => a.className))].sort();
+        setMyTeacherClasses(uniqueClasses);
+      })
+      .catch(() => setMyTeacherClasses([]));
+  }, [currentUser?.role, currentUser?.name]);
+
+  // Inject class submenus under "Input Nilai" only for teachers with assignments
+  // Admin / coordinator remain completely unchanged
+  const dynamicNavGroups = useMemo(() => {
+    if (myTeacherClasses.length === 0) return navGroups;
+
+    return navGroups.map(group => {
+      if (group.label !== 'Akademik') return group;
+      return {
+        ...group,
+        items: group.items.map(item => {
+          if (item.to !== '/akademik/nilai') return item;
+          return {
+            ...item,
+            children: myTeacherClasses.map(cls => ({
+              to: `/akademik/nilai?kelas=${cls}`,
+              label: `Kelas ${cls}`,
+              icon: BookOpen,
+            })),
+          };
+        }),
+      };
+    });
+  }, [myTeacherClasses]);
+
   const filteredNavGroups = useMemo(
-    () => filterNavGroups(navGroups, currentUser?.role),
-    [currentUser?.role]
+    () => filterNavGroups(dynamicNavGroups, currentUser?.role),
+    [dynamicNavGroups, currentUser?.role]
   );
-  // Auto-close on route change only on mobile
+
+  // Auto-close sidebar on route change (mobile only)
   const location = useLocation();
   useEffect(() => {
     if (window.innerWidth < 1024) onClose();

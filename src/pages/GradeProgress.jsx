@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
-import { BarChart3, ChevronDown, Users, BookOpen } from 'lucide-react';
+import { BarChart3, ChevronDown, Users, BookOpen, Lock } from 'lucide-react';
 
 const GRADE_OPTIONS = [7, 8, 9];
 
@@ -31,11 +31,30 @@ function ProgressBar({ percent, color = 'primary' }) {
 }
 
 export default function GradeProgress() {
-  const { academicYears, selectedAcademicYearId, getSemesterLabel } = useApp();
+  const { academicYears, selectedAcademicYearId, getSemesterLabel, currentUser } = useApp();
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [data, setData] = useState({ classes: [], year: '' });
   const [loading, setLoading] = useState(false);
+  const [myHomeroomClass, setMyHomeroomClass] = useState(null);
+
+  const isHomeroom = currentUser?.role === 'homeroom';
+
+  // Untuk wali kelas: fetch kelas yang ditetapkan admin dan auto-set filter
+  useEffect(() => {
+    if (!isHomeroom || !currentUser?.name) return;
+    api.getMyTeacher()
+      .then(t => {
+        if (t?.homeroom) {
+          setMyHomeroomClass(t.homeroom);
+          // Auto-set filter ke kelas wali kelas
+          setSelectedClass(t.homeroom);
+          const level = String(parseInt(t.homeroom));
+          setSelectedGrade(level);
+        }
+      })
+      .catch(() => {});
+  }, [isHomeroom, currentUser?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeYear = academicYears.find(y => y.id === selectedAcademicYearId) || academicYears.find(y => y.isActive);
   const availableClasses = data.classes
@@ -45,6 +64,8 @@ export default function GradeProgress() {
   // Fetch data when filters change
   useEffect(() => {
     if (!selectedAcademicYearId) return;
+    // Untuk homeroom: tunggu sampai kelas terambil sebelum fetch
+    if (isHomeroom && !selectedClass) return;
     setLoading(true);
     const params = { academicYearId: selectedAcademicYearId };
     if (selectedGrade) params.level = selectedGrade;
@@ -54,7 +75,7 @@ export default function GradeProgress() {
       .then(d => setData(d))
       .catch(() => setData({ classes: [], year: '' }))
       .finally(() => setLoading(false));
-  }, [selectedAcademicYearId, selectedGrade, selectedClass]);
+  }, [selectedAcademicYearId, selectedGrade, selectedClass, isHomeroom]);
 
   // Reset class when grade changes
   const handleGradeChange = (grade) => {
@@ -85,55 +106,68 @@ export default function GradeProgress() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-4">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
-          <div className="flex-1 max-w-[180px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Tingkat</label>
-            <div className="relative">
-              <select
-                value={selectedGrade}
-                onChange={e => handleGradeChange(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8"
-              >
-                <option value="">Semua Tingkat</option>
-                {GRADE_OPTIONS.map(g => (
-                  <option key={g} value={g}>Kelas {g}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+      {/* Filters — hanya tampil untuk admin/koordinator */}
+      {!isHomeroom ? (
+        <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-4">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+            <div className="flex-1 max-w-[180px]">
+              <label className="block text-xs font-medium text-gray-500 mb-1">Tingkat</label>
+              <div className="relative">
+                <select
+                  value={selectedGrade}
+                  onChange={e => handleGradeChange(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8"
+                >
+                  <option value="">Semua Tingkat</option>
+                  {GRADE_OPTIONS.map(g => (
+                    <option key={g} value={g}>Kelas {g}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
             </div>
-          </div>
-          <div className="flex-1 max-w-[180px]">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Kelas</label>
-            <div className="relative">
-              <select
-                value={selectedClass}
-                onChange={e => setSelectedClass(e.target.value)}
-                disabled={!selectedGrade}
-                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8 disabled:opacity-50"
-              >
-                <option value="">Semua Kelas</option>
-                {data.classes
-                  .filter(c => !selectedGrade || c.level === Number(selectedGrade))
-                  .map(c => (
-                    <option key={c.className} value={c.className}>{c.className}</option>
-                  ))
-                }
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <div className="flex-1 max-w-[180px]">
+              <label className="block text-xs font-medium text-gray-500 mb-1">Kelas</label>
+              <div className="relative">
+                <select
+                  value={selectedClass}
+                  onChange={e => setSelectedClass(e.target.value)}
+                  disabled={!selectedGrade}
+                  className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8 disabled:opacity-50"
+                >
+                  <option value="">Semua Kelas</option>
+                  {data.classes
+                    .filter(c => !selectedGrade || c.level === Number(selectedGrade))
+                    .map(c => (
+                      <option key={c.className} value={c.className}>{c.className}</option>
+                    ))
+                  }
+                </select>
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
             </div>
+            {selectedClass && (
+              <button
+                onClick={() => setSelectedClass('')}
+                className="px-3 py-2 text-xs font-medium text-gray-500 bg-warm-100 hover:bg-warm-200 rounded-lg transition-all duration-200"
+              >
+                Tampilkan Semua
+              </button>
+            )}
           </div>
-          {selectedClass && (
-            <button
-              onClick={() => setSelectedClass('')}
-              className="px-3 py-2 text-xs font-medium text-gray-500 bg-warm-100 hover:bg-warm-200 rounded-lg transition-all duration-200"
-            >
-              Tampilkan Semua
-            </button>
-          )}
         </div>
-      </div>
+      ) : (
+        // Wali kelas: tampilkan badge kelas terkunci
+        <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-4">
+          <div className="flex items-center gap-3">
+            <Lock size={14} className="text-primary-400 shrink-0" />
+            <span className="text-xs text-gray-500">Menampilkan progres nilai untuk kelas wali Anda:</span>
+            <span className="px-2.5 py-1 bg-primary-100 text-primary-700 text-xs font-bold rounded-lg">
+              {myHomeroomClass || 'Memuat...'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (

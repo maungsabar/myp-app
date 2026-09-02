@@ -65,16 +65,33 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/teachers/me — get teacher record for current logged-in user
+// Juga mencari kelas wali kelas dari tabel classes (homeroomTeacherId)
+// agar field `homeroom` selalu akurat walau Teacher.homeroom tidak di-update manual.
 router.get('/me', async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
     const teacher = await prisma.teacher.findFirst({ where: { name: req.user.name } });
     if (!teacher) return res.status(404).json({ error: 'Teacher record not found for this user' });
-    res.json(teacher);
+
+    // Cari kelas wali: cek tabel classes.homeroomTeacherId (sumber kebenaran dari admin)
+    // Prioritaskan kelas dari tahun ajaran aktif
+    const activeYear = await prisma.academicYear.findFirst({ where: { isActive: true } });
+    const homeroomClass = await prisma.class.findFirst({
+      where: {
+        homeroomTeacherId: teacher.id,
+        ...(activeYear ? { academicYearId: activeYear.id } : {}),
+      },
+    });
+
+    // Inject homeroom dari Class jika ditemukan, fallback ke teacher.homeroom
+    const homeroom = homeroomClass?.name || teacher.homeroom || null;
+
+    res.json({ ...teacher, homeroom });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 router.get('/:id', async (req, res) => {
   try {

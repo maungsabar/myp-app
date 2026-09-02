@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
 import { getCriteriaKeys, getCriteriaCount } from '../data/dummyData';
-import { FileText, Printer, ChevronDown, User, BookOpen, Award, GraduationCap, Download } from 'lucide-react';
+import { FileText, Printer, ChevronDown, User, BookOpen, Award, GraduationCap, Download, Lock } from 'lucide-react';
 import ReportPreviewModal from '../components/shared/ReportPreviewModal';
 
 /* ── helpers ─────────────────────────────────────────────────────── */
@@ -629,45 +629,62 @@ export default function Report() {
         </div>
       </div>
 
-      {/* Filter panel — hidden for students */}
-      {currentUser?.role !== 'student' && (<>
+      {/* Filter panel — hidden for students; simplified for homeroom */}
+      {currentUser?.role !== 'student' && (
       <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-5">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-          {/* Grade filter */}
-          <div className="flex-1 max-w-[200px]">
-            <label className={labelCls}>Pilih Grade</label>
-            <div className="relative">
-              <select value={selectedGrade} onChange={e => handleGradeChange(e.target.value)} className={inputCls} disabled={currentUser?.role === 'homeroom'}>
-                <option value="">-- Pilih Grade --</option>
-                {GRADE_OPTIONS.map(g => (
-                  <option key={g} value={g}>Grade {g}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        {currentUser?.role === 'homeroom' ? (
+          // Wali kelas: tampilkan badge kelas terkunci (tidak perlu pilih grade/kelas)
+          <div className="flex items-center gap-3">
+            <Lock size={14} className="text-primary-400 shrink-0" />
+            <span className="text-xs text-gray-500">Menampilkan rapor untuk kelas wali Anda:</span>
+            <span className="px-2.5 py-1 bg-primary-100 text-primary-700 text-xs font-bold rounded-lg">
+              {myHomeroomClass || 'Memuat...'}
+            </span>
+            <div className="ml-auto flex items-center gap-2 text-xs text-gray-500">
+              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{activeYearStr}</span>
+              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{getSemesterLabel(activeYear, activeSemester)}</span>
             </div>
           </div>
+        ) : (
+          // Admin/koordinator: filter lengkap Grade + Kelas
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+            {/* Grade filter */}
+            <div className="flex-1 max-w-[200px]">
+              <label className={labelCls}>Pilih Grade</label>
+              <div className="relative">
+                <select value={selectedGrade} onChange={e => handleGradeChange(e.target.value)} className={inputCls}>
+                  <option value="">-- Pilih Grade --</option>
+                  {GRADE_OPTIONS.map(g => (
+                    <option key={g} value={g}>Grade {g}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
 
-          {/* Class filter */}
-          <div className="flex-1 max-w-[200px]">
-            <label className={labelCls}>Pilih Kelas</label>
-            <div className="relative">
-              <select value={selectedClass} onChange={e => handleClassChange(e.target.value)} className={inputCls} disabled={!selectedGrade || currentUser?.role === 'homeroom'}>
-                <option value="">-- Pilih Kelas --</option>
-                {filteredClasses.map(c => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            {/* Class filter */}
+            <div className="flex-1 max-w-[200px]">
+              <label className={labelCls}>Pilih Kelas</label>
+              <div className="relative">
+                <select value={selectedClass} onChange={e => handleClassChange(e.target.value)} className={inputCls} disabled={!selectedGrade}>
+                  <option value="">-- Pilih Kelas --</option>
+                  {filteredClasses.map(c => (
+                    <option key={c.id} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Active info */}
+            <div className="flex items-center gap-2 text-xs text-gray-500 pb-1">
+              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{activeYearStr}</span>
+              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{getSemesterLabel(activeYear, activeSemester)}</span>
             </div>
           </div>
-
-          {/* Active info */}
-          <div className="flex items-center gap-2 text-xs text-gray-500 pb-1">
-            <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{activeYearStr}</span>
-            <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{getSemesterLabel(activeYear, activeSemester)}</span>
-          </div>
-        </div>
+        )}
       </div>
+      )}
 
       {/* Student table */}
       {selectedClass && (
@@ -753,7 +770,8 @@ export default function Report() {
           <p className="text-gray-300 text-xs mt-1">Setelah memilih kelas, Anda dapat preview atau print rapor setiap siswa.</p>
         </div>
       )}
-      </>)}
+
+
 
       {/* Student view — shown only for student role */}
       {currentUser?.role === 'student' && printingStudent && (

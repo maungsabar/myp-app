@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
 import { getCriteriaKeys, getCriteriaCount } from '../data/dummyData';
@@ -30,9 +31,42 @@ export default function Grades() {
   const [localEdits, setLocalEdits] = useState({});
   const [saveState, setSaveState] = useState('idle'); // idle | saving | saved | error
   const [myAssignments, setMyAssignments] = useState([]);
+  // Semua kelas yang diajar guru ini (fetch sekali saat mount, null = belum selesai fetch)
+  const [myAllAssignedClasses, setMyAllAssignedClasses] = useState(null);
+
+  // ─── Auto-select Grade & Kelas from URL query param (?kelas=7A) ───
+  // This is set when a teacher clicks a class submenu in the sidebar.
+  const [searchParams] = useSearchParams();
+  const kelasParam = searchParams.get('kelas');
+
+  useEffect(() => {
+    if (!kelasParam || classes.length === 0) return;
+    const cls = classes.find(c => c.name === kelasParam);
+    if (cls) {
+      setSelectedGrade(String(cls.level));
+      setSelectedClass(cls.name);
+      setSelectedSubjectId(null);
+      setLocalEdits({});
+    }
+  }, [kelasParam, classes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch teaching assignments when class changes (for subject and homeroom teachers)
   const isTeacherRole = currentUser?.role === 'subject' || currentUser?.role === 'homeroom';
+
+  // Fetch SEMUA assignment guru ini sekali saat mount — untuk filter dropdown Grade & Kelas
+  useEffect(() => {
+    if (!isTeacherRole || !currentUser?.name) {
+      setMyAllAssignedClasses(null); // null = admin/coordinator, tampilkan semua
+      return;
+    }
+    api.getTeachingAssignments()
+      .then(data => {
+        const mine = data.filter(a => a.teacher?.name === currentUser.name);
+        const uniqueClasses = [...new Set(mine.map(a => a.className))];
+        setMyAllAssignedClasses(uniqueClasses);
+      })
+      .catch(() => setMyAllAssignedClasses([]));
+  }, [isTeacherRole, currentUser?.name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!selectedClass || !isTeacherRole) {
@@ -52,13 +86,26 @@ export default function Grades() {
 
   const selectedYearObj = academicYears.find(y => y.year === selectedYear) || activeYear;
 
-  // Classes filtered by selected grade
+  // Grade levels yang tersedia di dropdown:
+  // - Admin/coordinator (myAllAssignedClasses === null): semua grade dari database
+  // - Guru (myAllAssignedClasses = array): hanya grade dari kelas yang diajar
+  const availableGrades = useMemo(() => {
+    if (myAllAssignedClasses === null) {
+      return [...new Set(classes.map(c => c.level))].sort((a, b) => a - b);
+    }
+    const assignedClassObjs = classes.filter(c => myAllAssignedClasses.includes(c.name));
+    return [...new Set(assignedClassObjs.map(c => c.level))].sort((a, b) => a - b);
+  }, [classes, myAllAssignedClasses]);
+
+  // Kelas di dropdown: filter by grade DAN (untuk guru) hanya kelas yang diajar
   const filteredClasses = useMemo(() => {
     if (!selectedGrade) return [];
-    return classes
-      .filter(c => c.level === Number(selectedGrade))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [classes, selectedGrade]);
+    let list = classes.filter(c => c.level === Number(selectedGrade));
+    if (myAllAssignedClasses !== null) {
+      list = list.filter(c => myAllAssignedClasses.includes(c.name));
+    }
+    return list.sort((a, b) => a.name.localeCompare(b.name));
+  }, [classes, selectedGrade, myAllAssignedClasses]);
 
   // Subjects available for the selected grade, filtered by teaching assignment for teachers
   const filteredSubjects = useMemo(() => {
@@ -238,12 +285,13 @@ export default function Grades() {
               <select
                 value={selectedGrade}
                 onChange={e => handleGradeChange(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8"
+                disabled={isTeacherRole && myAllAssignedClasses === null}
+                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8 disabled:opacity-50"
               >
                 <option value="">-- Pilih Grade --</option>
-                <option value="7">Grade 7</option>
-                <option value="8">Grade 8</option>
-                <option value="9">Grade 9</option>
+                {availableGrades.map(g => (
+                  <option key={g} value={g}>Grade {g}</option>
+                ))}
               </select>
               <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
