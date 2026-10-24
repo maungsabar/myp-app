@@ -51,6 +51,7 @@ const navGroups = [
     items: [
       { to: '/laporan/progres-nilai', icon: BarChart3, label: 'Progres Nilai' },
       { to: '/laporan/rapor', icon: Printer, label: 'Cetak Rapor' },
+      { to: '/laporan/pengaturan-cetak', icon: Settings, label: 'Pengaturan Cetak' },
     ]
   },
   {
@@ -68,8 +69,8 @@ const navGroups = [
 // Role-based navigation access
 const ROLE_NAV = {
   admin: null, // null = access to everything
-  coordinator: ['/', '/master/mata-pelajaran', '/master/deskriptor', '/master/grade-boundaries', '/laporan/progres-nilai', '/laporan/rapor'],
-  homeroom: ['/', '/akademik/nilai', '/akademik/kehadiran', '/laporan/progres-nilai', '/laporan/rapor'],
+  coordinator: ['/', '/master/mata-pelajaran', '/master/deskriptor', '/master/grade-boundaries', '/laporan/progres-nilai', '/laporan/rapor', '/laporan/pengaturan-cetak'],
+  homeroom: ['/', '/akademik/nilai', '/akademik/kehadiran', '/laporan/progres-nilai', '/laporan/rapor', '/laporan/pengaturan-cetak'],
   subject: ['/', '/akademik/nilai'],
   student: ['/', '/laporan/rapor'],
 };

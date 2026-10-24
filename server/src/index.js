@@ -93,7 +93,7 @@ app.use('/api/users', authenticate, authorize('admin'), usersRouter);
 app.use('/api/alumni', authenticate, authorize('admin'), alumniRouter);
 app.use('/api/criteria-descriptors', authenticate, authorize('admin', 'coordinator', 'homeroom', 'subject', 'student'), criteriaDescriptorsRouter);
 app.use('/api/learner-profiles', authenticate, authorize('admin', 'coordinator', 'homeroom', 'subject', 'student'), learnerProfilesRouter);
-app.use('/api/settings', authenticate, authorize('admin'), settingsRouter);
+app.use('/api/settings', authenticate, authorize('admin', 'coordinator', 'homeroom', 'subject', 'student'), settingsRouter);
 app.use('/api/dashboard', authenticate, dashboardRouter);
 app.use('/api/teaching-assignments', authenticate, authorize('admin', 'coordinator', 'homeroom', 'subject'), teachingAssignmentsRouter);
 app.use('/api/grade-boundaries', authenticate, authorize('admin', 'coordinator', 'student'), gradeBoundariesRouter);

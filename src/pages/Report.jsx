@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import api from '../services/api';
 import { getCriteriaKeys, getCriteriaCount } from '../data/dummyData';
-import { FileText, Printer, ChevronDown, User, BookOpen, Award, GraduationCap, Download, Lock } from 'lucide-react';
+import { FileText, Printer, ChevronDown, User, BookOpen, Award, GraduationCap, Download, Lock, Calendar } from 'lucide-react';
 import ReportPreviewModal from '../components/shared/ReportPreviewModal';
 
 /* ── helpers ─────────────────────────────────────────────────────── */
@@ -30,11 +31,9 @@ function getGradeBorderColor(grade) {
 /* ── Page wrapper (A4 feel) ──────────────────────────────────────── */
 
 function ReportPage({ pageNum, totalPages, studentName, nis, studentClass, semester, academicYear, children }) {
-  const { activeYear, getSemesterLabel } = useApp();
+  const { activeYear, getSemesterLabel, getReportPrintDate } = useApp();
   const semesterLabel = getSemesterLabel(activeYear, semester);
-  const now = new Date();
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const printDate = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+  const printDate = getReportPrintDate ? getReportPrintDate(semester) : `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][new Date().getMonth()]} ${new Date().getFullYear()}`;
 
   return (
     <div className="relative bg-white shadow-lg border border-gray-200 rounded-sm mx-auto mb-8"
@@ -466,6 +465,7 @@ export default function Report() {
     schoolProfile, activeYear, criteriaDescriptors,
     calculateGrade, calculateGradeDynamic, getLocalGrade, getScaledBoundaries,
     learnerProfiles, ibProfileLogo, getGradeLevelKey, getSemesterLabel, currentUser,
+    getReportPrintDate,
   } = useApp();
 
   const [selectedGrade, setSelectedGrade] = useState('');
@@ -616,16 +616,38 @@ export default function Report() {
   const inputCls = 'w-full px-3 py-2 text-sm border border-warm-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-400 appearance-none bg-white pr-8';
   const labelCls = 'block text-xs font-medium text-gray-500 mb-1';
 
+  const currentPrintDate = getReportPrintDate ? getReportPrintDate(activeSemester) : '';
+
   return (
     <div className="space-y-5">
       {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center justify-center w-10 h-10 bg-primary-100 rounded-xl">
-          <FileText size={20} className="text-primary-700" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-10 h-10 bg-primary-100 rounded-xl">
+            <FileText size={20} className="text-primary-700" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-primary-900">Cetak Rapor</h1>
+            <p className="text-sm text-gray-500">MYP Report Card Preview & Generation</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-primary-900">Cetak Rapor</h1>
-          <p className="text-sm text-gray-500">MYP Report Card Preview & Generation</p>
+
+        {/* Titimangsa info badge with quick link to settings */}
+        <div className="flex items-center gap-2 bg-white border border-warm-200 shadow-sm rounded-xl px-3.5 py-2">
+          <Calendar size={15} className="text-primary-600" />
+          <div className="text-xs">
+            <span className="text-gray-400">Titimangsa Cetak: </span>
+            <span className="font-semibold text-primary-800">{currentPrintDate}</span>
+          </div>
+          {['admin', 'coordinator', 'homeroom'].includes(currentUser?.role) && (
+            <Link
+              to="/laporan/pengaturan-cetak"
+              className="ml-2 px-2.5 py-1 text-[11px] font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-md transition-colors"
+              title="Ubah bulan dan tahun cetak rapor"
+            >
+              Ubah
+            </Link>
+          )}
         </div>
       </div>
 

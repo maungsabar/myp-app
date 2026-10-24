@@ -3,6 +3,24 @@ import { prisma } from '../db.js';
 
 const router = Router();
 
+// Authorization middleware for mutating settings
+const requireStaff = (req, res, next) => {
+  if (!['admin', 'coordinator', 'homeroom'].includes(req.user?.role)) {
+    return res.status(403).json({ error: 'Anda tidak memiliki hak akses untuk mengubah pengaturan ini.' });
+  }
+  next();
+};
+
+// Default print settings (titimangsa rapor)
+const DEFAULT_PRINT_SETTINGS = {
+  mode: 'semester', // 'semester' | 'fixed' | 'realtime'
+  month: 'December',
+  year: new Date().getFullYear(),
+  language: 'en', // 'en' | 'id'
+  semester1: { month: 'December', year: new Date().getFullYear() },
+  semester2: { month: 'June', year: new Date().getFullYear() },
+};
+
 // GET /api/settings/ib-profile-logo
 router.get('/ib-profile-logo', async (req, res) => {
   try {
@@ -14,7 +32,7 @@ router.get('/ib-profile-logo', async (req, res) => {
 });
 
 // PUT /api/settings/ib-profile-logo — set logo (base64 data URL)
-router.put('/ib-profile-logo', async (req, res) => {
+router.put('/ib-profile-logo', requireStaff, async (req, res) => {
   try {
     const { logo } = req.body;
     const setting = await prisma.appSetting.upsert({
@@ -29,7 +47,7 @@ router.put('/ib-profile-logo', async (req, res) => {
 });
 
 // DELETE /api/settings/ib-profile-logo — remove logo
-router.delete('/ib-profile-logo', async (req, res) => {
+router.delete('/ib-profile-logo', requireStaff, async (req, res) => {
   try {
     await prisma.appSetting.upsert({
       where: { key: 'ibProfileLogo' },
@@ -46,13 +64,16 @@ router.delete('/ib-profile-logo', async (req, res) => {
 router.get('/:key', async (req, res) => {
   try {
     const setting = await prisma.appSetting.findUnique({ where: { key: req.params.key } });
+    if (!setting && req.params.key === 'printSettings') {
+      return res.json({ key: 'printSettings', value: DEFAULT_PRINT_SETTINGS });
+    }
     res.json({ key: req.params.key, value: setting?.value || null });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.put('/:key', async (req, res) => {
+router.put('/:key', requireStaff, async (req, res) => {
   try {
     const setting = await prisma.appSetting.upsert({
       where: { key: req.params.key },

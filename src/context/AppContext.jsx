@@ -7,8 +7,8 @@ const AppContext = createContext();
 // Role-based page access map
 export const ROLE_ACCESS = {
   admin: ['*'], // all pages
-  coordinator: ['/', '/master/mata-pelajaran', '/master/deskriptor', '/master/grade-boundaries', '/laporan/progres-nilai', '/laporan/rapor'],
-  homeroom: ['/', '/akademik/nilai', '/akademik/kehadiran', '/laporan/progres-nilai', '/laporan/rapor'],
+  coordinator: ['/', '/master/mata-pelajaran', '/master/deskriptor', '/master/grade-boundaries', '/laporan/progres-nilai', '/laporan/rapor', '/laporan/pengaturan-cetak'],
+  homeroom: ['/', '/akademik/nilai', '/akademik/kehadiran', '/laporan/progres-nilai', '/laporan/rapor', '/laporan/pengaturan-cetak'],
   subject: ['/', '/akademik/nilai'],
   student: ['/', '/laporan/rapor'],
 };
@@ -34,6 +34,14 @@ export function AppProvider({ children }) {
   const [criteriaDescriptors, setCriteriaDescriptors] = useState({});
   const [learnerProfiles, setLearnerProfiles] = useState([]);
   const [ibProfileLogo, setIbProfileLogo] = useState(null);
+  const [printSettings, setPrintSettings] = useState({
+    mode: 'semester',
+    month: 'December',
+    year: new Date().getFullYear(),
+    language: 'en',
+    semester1: { month: 'December', year: new Date().getFullYear() },
+    semester2: { month: 'June', year: new Date().getFullYear() },
+  });
   const [loading, setLoading] = useState(true);
   const [apiConnected, setApiConnected] = useState(null);
   const [toast, setToast] = useState(null);
@@ -106,6 +114,7 @@ export function AppProvider({ children }) {
           api.getClasses(),           // 10
           api.getLearnerProfiles(),   // 11
           api.getIbProfileLogo(),     // 12
+          api.getPrintSettings(),     // 13
         ]);
 
         if (cancelled) return;
@@ -127,6 +136,7 @@ export function AppProvider({ children }) {
         if (val(10)) setClasses(val(10).map(({ homeroomTeacher, ...rest }) => rest));
         if (val(11)) setLearnerProfiles(val(11).map(({ name, description }) => ({ name, description })));
         if (val(12)) setIbProfileLogo(val(12)?.logo || null);
+        if (val(13)?.value) setPrintSettings(val(13).value);
 
         if (hasAnySuccess) {
           setApiConnected(true);
@@ -448,6 +458,48 @@ export function AppProvider({ children }) {
     }
   }, [showToast]);
 
+  // Save Print Settings (Titimangsa Rapor)
+  const savePrintSettings = useCallback(async (settings) => {
+    try {
+      await api.savePrintSettings(settings);
+      setPrintSettings(settings);
+      showToast('success', 'Pengaturan cetak rapor berhasil disimpan.');
+      return true;
+    } catch (err) {
+      showToast('error', `Gagal menyimpan pengaturan cetak: ${err.message}`);
+      return false;
+    }
+  }, [showToast]);
+
+  // Helper to format report print date (titimangsa)
+  const getReportPrintDate = useCallback((semester) => {
+    const s = Number(semester) || 1;
+    const now = new Date();
+    const isIndo = printSettings?.language === 'id';
+    const monthNamesEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNamesId = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const defaultMonth = isIndo ? monthNamesId[now.getMonth()] : monthNamesEn[now.getMonth()];
+    const defaultYear = now.getFullYear();
+
+    if (!printSettings || printSettings.mode === 'realtime') {
+      return `${defaultMonth} ${defaultYear}`;
+    }
+
+    if (printSettings.mode === 'semester') {
+      const semKey = s === 1 ? 'semester1' : 'semester2';
+      const semData = printSettings[semKey];
+      if (semData?.month && semData?.year) {
+        return `${semData.month} ${semData.year}`;
+      }
+    }
+
+    if (printSettings.month && printSettings.year) {
+      return `${printSettings.month} ${printSettings.year}`;
+    }
+
+    return `${defaultMonth} ${defaultYear}`;
+  }, [printSettings]);
+
   return (
     <AppContext.Provider value={{
       loading, apiConnected, toast, showToast,
@@ -495,6 +547,8 @@ export function AppProvider({ children }) {
       // Learner Profiles & Logo
       learnerProfiles, setLearnerProfiles: saveLearnerProfiles,
       ibProfileLogo, setIbProfileLogo: saveIbProfileLogo,
+      // Print Settings (Titimangsa Rapor)
+      printSettings, setPrintSettings: savePrintSettings, getReportPrintDate,
     }}>
       {children}
     </AppContext.Provider>
