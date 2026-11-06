@@ -156,9 +156,14 @@ body {
     border-radius: 0 !important;
     margin: 0 !important;
     width: 100% !important;
-    min-height: 297mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
     page-break-after: always;
     break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   /* Last page: no page break after */

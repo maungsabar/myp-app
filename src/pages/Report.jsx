@@ -36,7 +36,7 @@ function ReportPage({ pageNum, totalPages, studentName, nis, studentClass, semes
   const printDate = getReportPrintDate ? getReportPrintDate(semester) : `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][new Date().getMonth()]} ${new Date().getFullYear()}`;
 
   return (
-    <div className="relative bg-white shadow-lg border border-gray-200 rounded-sm mx-auto mb-8"
+    <div className="relative bg-white shadow-lg border border-gray-200 rounded-sm mx-auto mb-8 report-page"
       style={{ width: '210mm', minHeight: '297mm', padding: '20mm 18mm 22mm 18mm' }}
     >
       <div className="text-gray-800 leading-relaxed" style={{ fontFamily: "'Montserrat', sans-serif" }}>
@@ -64,16 +64,14 @@ function ReportPage({ pageNum, totalPages, studentName, nis, studentClass, semes
 /* ── PAGE 1 : Cover Letter ───────────────────────────────────────── */
 
 function CoverPage({ schoolProfile, student, semester, academicYear, pageNum, totalPages }) {
-  const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
   return (
     <ReportPage pageNum={pageNum} totalPages={totalPages} studentName={student.name} nis={student.nis} studentClass={student.class} semester={semester} academicYear={academicYear}>
       {/* Letter body */}
-      <div className="text-sm leading-7 text-gray-700 mb-10 space-y-4 text-justify">
-        <p>Dear Parents,</p>
-        <p>Assalamu’alaikum warahmatullahi wabarakatuh,</p>
+      <div className="text-xs leading-[1.65] text-gray-700 mb-4 space-y-2.5 text-justify">
+        <p className="font-semibold text-gray-800">Dear Parents,</p>
+        <p className="italic text-gray-600">Assalamu’alaikum warahmatullahi wabarakatuh,</p>
         <p>
-          Alhamdulillah, with gratitude to Allah ﷻ, we are pleased to share with you the MYP Semester Report for the academic year {academicYear} This report is designed to provide you with a clear picture of your child’s learning progress across all subject groups within the Middle Years Programme (MYP).
+          Alhamdulillah, with gratitude to Allah ﷻ, we are pleased to share with you the MYP Semester Report for the academic year {academicYear}. This report is designed to provide you with a clear picture of your child’s learning progress across all subject groups within the Middle Years Programme (MYP).
         </p>
         <p>
           Our aim is to help you, together with your child and their teachers, reflect on learning achievements and plan meaningful steps for continuous academic, personal, and spiritual growth in line with our vision of nurturing future Islamic leaders who embody the values of faith, knowledge, and good character (iman, ilmu, dan akhlak).
@@ -94,22 +92,22 @@ function CoverPage({ schoolProfile, student, semester, academicYear, pageNum, to
           Thank you for your continuous support and partnership in your child’s educational journey.
         </p>
       </div>
-      <div className="text-sm leading-7 text-gray-700 space-y-4">
-        <p>Wassalamu’alaikum warahmatullahi wabarakatuh,</p>
-        <p>Kind regards,</p>
+      <div className="text-xs leading-normal text-gray-700 space-y-1 mb-6">
+        <p className="italic text-gray-600">Wassalamu’alaikum warahmatullahi wabarakatuh,</p>
+        <p className="font-medium">Kind regards,</p>
       </div>
 
       {/* Signatures */}
-      <div className="flex justify-between mt-12">
+      <div className="flex justify-between mt-6" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
         <div className="text-center w-48">
-          <div className="border-b border-gray-400 mb-1 h-16"></div>
-          <p className="text-sm font-bold">{schoolProfile.principal}</p>
-          <p className="text-xs text-gray-500">Principal</p>
+          <div className="border-b border-gray-400 mb-1.5 h-12"></div>
+          <p className="text-xs font-bold text-gray-800">{schoolProfile.principal}</p>
+          <p className="text-[11px] text-gray-500">Principal</p>
         </div>
         <div className="text-center w-48">
-          <div className="border-b border-gray-400 mb-1 h-16"></div>
-          <p className="text-sm font-bold">{schoolProfile.mypCoordinator}</p>
-          <p className="text-xs text-gray-500">MYP Coordinator</p>
+          <div className="border-b border-gray-400 mb-1.5 h-12"></div>
+          <p className="text-xs font-bold text-gray-800">{schoolProfile.mypCoordinator}</p>
+          <p className="text-[11px] text-gray-500">MYP Coordinator</p>
         </div>
       </div>
 
@@ -117,37 +115,37 @@ function CoverPage({ schoolProfile, student, semester, academicYear, pageNum, to
   );
 }
 
-/* ── PAGE 2 : Guidelines ─────────────────────────────────────────── */
+/* ── PAGE 2 : Guidelines ───────────────────────────────────────── */
 
 function GuidelinesPage({ gradeBoundaries, studentName, nis, studentClass, semester, academicYear, pageNum, totalPages }) {
   return (
     <ReportPage pageNum={pageNum} totalPages={totalPages} studentName={studentName} nis={nis} studentClass={studentClass} semester={semester} academicYear={academicYear}>
-      <h2 className="text-lg font-bold text-primary-800 mb-6 border-b border-primary-200 pb-2">
+      <h2 className="text-base font-bold text-primary-800 mb-4 border-b border-primary-200 pb-1.5">
         Assessment Criterias
       </h2>
 
       {/* Grade boundaries table */}
-      <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">
+      <h3 className="text-xs font-bold text-gray-700 mb-2.5 uppercase tracking-wider">
         MYP Assessment Criterias
       </h3>
-      <table className="w-full text-sm border-collapse mb-8">
+      <table className="w-full text-xs border-collapse mb-6" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
         <thead>
           <tr className="bg-primary-700 text-white">
-            <th className="px-3 py-2 text-left border border-primary-800">Final Grade</th>
-            <th className="px-3 py-2 text-center border border-primary-800">Boundary Guidelines</th>
-            <th className="px-3 py-2 text-left border border-primary-800">Descriptor</th>
+            <th className="px-3 py-1.5 text-left border border-primary-800">Final Grade</th>
+            <th className="px-3 py-1.5 text-center border border-primary-800">Boundary Guidelines</th>
+            <th className="px-3 py-1.5 text-left border border-primary-800">Descriptor</th>
           </tr>
         </thead>
         <tbody>
           {gradeBoundaries.map(b => (
             <tr key={b.grade} className="even:bg-gray-50">
-              <td className="px-3 py-2 border border-gray-200 font-bold text-center">
-                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${getGradeBadgeClasses(b.grade)}`}>
+              <td className="px-3 py-1.5 border border-gray-200 font-bold text-center">
+                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${getGradeBadgeClasses(b.grade)}`}>
                   {b.grade}
                 </span>
               </td>
-              <td className="px-3 py-2 border border-gray-200 text-center font-medium">{b.min} &ndash; {b.max}</td>
-              <td className="px-3 py-2 border border-gray-200 text-gray-600 italic text-justify">{b.label}</td>
+              <td className="px-3 py-1.5 border border-gray-200 text-center font-medium">{b.min} &ndash; {b.max}</td>
+              <td className="px-3 py-1.5 border border-gray-200 text-gray-600 italic text-justify leading-relaxed">{b.label}</td>
             </tr>
           ))}
         </tbody>
@@ -162,27 +160,27 @@ function ProgressSummaryPage({ student, subjectGrades, attendance, homeroomComme
   const allCriteria = ['A', 'B', 'C', 'D'];
   return (
     <ReportPage pageNum={pageNum} totalPages={totalPages} studentName={student.name} nis={student.nis} studentClass={student.class} semester={semester} academicYear={academicYear}>
-      <h2 className="text-lg font-bold text-primary-800 mb-6 border-b border-primary-200 pb-2">
+      <h2 className="text-base font-bold text-primary-800 mb-3 border-b border-primary-200 pb-1.5">
         Progress Summary
       </h2>
 
       {/* Student info */}
-       <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">
+      <h3 className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">
         Progress summary for subjects
       </h3>
 
       {/* Subject grades table */}
-      <table className="w-full text-xs border-collapse mb-6">
+      <table className="w-full text-[11px] border-collapse mb-4" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
         <thead>
           <tr className="bg-primary-700 text-white">
-            <th className="px-2 py-2 text-left border border-primary-800 w-8">No</th>
-            <th className="px-2 py-2 text-left border border-primary-800">Subject</th>
+            <th className="px-2 py-1.5 text-left border border-primary-800 w-8">No</th>
+            <th className="px-2 py-1.5 text-left border border-primary-800">Subject</th>
             {allCriteria.map(c => (
-              <th key={c} className="px-2 py-2 text-center border border-primary-800 w-10">{c}</th>
+              <th key={c} className="px-2 py-1.5 text-center border border-primary-800 w-10">{c}</th>
             ))}
-            <th className="px-2 py-2 text-center border border-primary-800 w-14">Total</th>
-            <th className="px-2 py-2 text-center border border-primary-800 w-16">MYP Grade</th>
-            <th className="px-2 py-2 text-center border border-primary-800 w-14">Local</th>
+            <th className="px-2 py-1.5 text-center border border-primary-800 w-14">Total</th>
+            <th className="px-2 py-1.5 text-center border border-primary-800 w-16">MYP Grade</th>
+            <th className="px-2 py-1.5 text-center border border-primary-800 w-14">Local</th>
           </tr>
         </thead>
         <tbody>
@@ -194,20 +192,20 @@ function ProgressSummaryPage({ student, subjectGrades, attendance, homeroomComme
             const fg = calculateGradeDynamic(total, cc);
             return (
               <tr key={sg.subjectId} className="even:bg-gray-50">
-                <td className="px-2 py-1.5 border border-gray-200 text-center">{idx + 1}</td>
-                <td className="px-2 py-1.5 border border-gray-200 font-medium">{sg.shortName}</td>
+                <td className="px-2 py-1 border border-gray-200 text-center">{idx + 1}</td>
+                <td className="px-2 py-1 border border-gray-200 font-medium">{sg.shortName}</td>
                 {allCriteria.map(c => (
-                  <td key={c} className="px-2 py-1.5 border border-gray-200 text-center">
+                  <td key={c} className="px-2 py-1 border border-gray-200 text-center">
                     {activeKeys.includes(c) ? sg[`score${c}`] : <span className="text-gray-300">—</span>}
                   </td>
                 ))}
-                <td className="px-2 py-1.5 border border-gray-200 text-center font-bold">{total}<span className="text-[9px] text-gray-400 font-normal">/{maxTotal}</span></td>
-                <td className="px-2 py-1.5 border border-gray-200 text-center">
-                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${getGradeBadgeClasses(fg)}`}>
+                <td className="px-2 py-1 border border-gray-200 text-center font-bold">{total}<span className="text-[9px] text-gray-400 font-normal">/{maxTotal}</span></td>
+                <td className="px-2 py-1 border border-gray-200 text-center">
+                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${getGradeBadgeClasses(fg)}`}>
                     {fg}
                   </span>
                 </td>
-                <td className="px-2 py-1.5 border border-gray-200 text-center font-medium">{getLocalGrade(fg)}</td>
+                <td className="px-2 py-1 border border-gray-200 text-center font-medium">{getLocalGrade(fg)}</td>
               </tr>
             );
           })}
@@ -215,50 +213,50 @@ function ProgressSummaryPage({ student, subjectGrades, attendance, homeroomComme
       </table>
 
       {/* Homeroom Teacher Comment */}
-      <div className="mb-6">
-        <h3 className="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">
+      <div className="mb-4" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <h3 className="text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
           Homeroom Teacher Comment
         </h3>
-        <div className="border border-gray-200 rounded p-4 bg-gray-50 min-h-[80px]">
+        <div className="border border-gray-200 rounded p-3 bg-gray-50 min-h-[55px]">
           {homeroomComment ? (
             <>
-              <p className="text-sm text-gray-700 leading-6 italic">{homeroomComment.comment}</p>
-              <p className="text-xs text-gray-400 mt-2 text-right">&mdash; {homeroomComment.teacherName}</p>
+              <p className="text-xs text-gray-700 leading-5 italic">{homeroomComment.comment}</p>
+              <p className="text-[11px] text-gray-400 mt-1.5 text-right">&mdash; {homeroomComment.teacherName}</p>
             </>
           ) : (
-            <p className="text-sm text-gray-400 italic">No comment recorded for this semester.</p>
+            <p className="text-xs text-gray-400 italic">No comment recorded for this semester.</p>
           )}
         </div>
       </div>
 
       {/* Attendance table */}
-      <div>
-        <h3 className="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wider">
+      <div style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <h3 className="text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wider">
           Attendance Record
         </h3>
         {attendance ? (
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-3 py-2 text-center border border-gray-200">Present </th>
-                <th className="px-3 py-2 text-center border border-gray-200">Unexcused </th>
-                <th className="px-3 py-2 text-center border border-gray-200">Sick </th>
-                <th className="px-3 py-2 text-center border border-gray-200">Excused </th>
-                <th className="px-3 py-2 text-center border border-gray-200">Total</th>
+                <th className="px-3 py-1.5 text-center border border-gray-200">Present </th>
+                <th className="px-3 py-1.5 text-center border border-gray-200">Unexcused </th>
+                <th className="px-3 py-1.5 text-center border border-gray-200">Sick </th>
+                <th className="px-3 py-1.5 text-center border border-gray-200">Excused </th>
+                <th className="px-3 py-1.5 text-center border border-gray-200">Total</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="px-3 py-2 text-center border border-gray-200 font-bold text-emerald-700">{attendance.present}</td>
-                <td className="px-3 py-2 text-center border border-gray-200 font-bold text-red-600">{attendance.unexcused}</td>
-                <td className="px-3 py-2 text-center border border-gray-200 font-bold text-amber-600">{attendance.sick}</td>
-                <td className="px-3 py-2 text-center border border-gray-200 font-bold text-blue-600">{attendance.excused}</td>
-                <td className="px-3 py-2 text-center border border-gray-200 font-bold">{attendance.present + attendance.unexcused + attendance.sick + attendance.excused}</td>
+                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-emerald-700">{attendance.present}</td>
+                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-red-600">{attendance.unexcused}</td>
+                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-amber-600">{attendance.sick}</td>
+                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-blue-600">{attendance.excused}</td>
+                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold">{attendance.present + attendance.unexcused + attendance.sick + attendance.excused}</td>
               </tr>
             </tbody>
           </table>
         ) : (
-          <p className="text-sm text-gray-400 italic">No attendance data recorded.</p>
+          <p className="text-xs text-gray-400 italic">No attendance data recorded.</p>
         )}
       </div>
     </ReportPage>
@@ -299,11 +297,10 @@ function SubjectDetailPage({ subject, grade, criteriaDescriptors, gradeLevel, st
   return (
     <ReportPage pageNum={pageNum} totalPages={totalPages} studentName={studentName} nis={nis} studentClass={studentClass} semester={semester} academicYear={academicYear}>
       {/* Subject header */}
-      
-        <div className="border-b-2 border-primary-700 pb-3 mb-6">
-          <h2 className="text-lg font-bold text-primary-800">{subject.name}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">MYP Assessment Criterion</p>
-        </div>
+      <div className="border-b-2 border-primary-700 pb-2 mb-3.5">
+        <h2 className="text-base font-bold text-primary-800">{subject.name}</h2>
+        <p className="text-[11px] text-gray-500 mt-0.5">MYP Assessment Criterion</p>
+      </div>
 
       {/* Criteria sections */}
       {criteriaList.map(c => {
@@ -313,33 +310,31 @@ function SubjectDetailPage({ subject, grade, criteriaDescriptors, gradeLevel, st
         // Get descriptors for the matching level band, fallback to old flat descriptors
         const levelDescs = desc.levels?.[levelKey] || desc.descriptors || [];
         return (
-          <div key={c} className="mb-5">
-            <div className="flex items-center justify-between mb-1.5">
-              <h3 className="text-sm font-bold text-gray-700">
+          <div key={c} className="mb-3" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-xs font-bold text-gray-700">
                 Criterion {c}: {desc.title}
               </h3>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400">Achievement</span>
-                <span className={`inline-flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold border-2 ${
-                  score >= 6 ? 'border-emerald-300 bg-emerald-50 text-emerald-700' :
-                  score >= 4 ? 'border-amber-300 bg-amber-50 text-amber-700' :
-                  'border-red-200 bg-red-50 text-red-600'
-                }`}>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-gray-400">Achievement</span>
+                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold border ${score >= 6 ? 'border-emerald-300 bg-emerald-50 text-emerald-700' :
+                    score >= 4 ? 'border-amber-300 bg-amber-50 text-amber-700' :
+                      'border-red-200 bg-red-50 text-red-600'
+                  }`}>
                   {score}
                 </span>
-                <span className="text-xs text-gray-400">/ 8</span>
+                <span className="text-[11px] text-gray-400">/ 8</span>
               </div>
             </div>
             {/* Score bar */}
-            <div className="h-1.5 bg-gray-100 rounded-full mb-1 overflow-hidden">
+            <div className="h-1 bg-gray-100 rounded-full mb-0.5 overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${
-                  score >= 6 ? 'bg-emerald-500' : score >= 4 ? 'bg-amber-400' : 'bg-red-400'
-                }`}
+                className={`h-full rounded-full transition-all ${score >= 6 ? 'bg-emerald-500' : score >= 4 ? 'bg-amber-400' : 'bg-red-400'
+                  }`}
                 style={{ width: `${(score / 8) * 100}%` }}
               />
             </div>
-            <p className="text-[10px] text-gray-400 mb-1.5">Level {levelKey}</p>
+            <p className="text-[9px] text-gray-400 mb-1">Level {levelKey}</p>
             {levelDescs.length > 0 && (() => {
               // Separate heading prefix (e.g. "The student is able to:") from achievement items
               const firstItem = levelDescs[0];
@@ -347,8 +342,8 @@ function SubjectDetailPage({ subject, grade, criteriaDescriptors, gradeLevel, st
               const heading = isHeading ? firstItem : null;
               const items = isHeading ? levelDescs.slice(1) : levelDescs;
               return (
-                <div className="text-xs text-gray-500 leading-5 space-y-0.5">
-                  {heading && <p className="font-medium text-gray-600">{heading}</p>}
+                <div className="text-[11px] text-gray-600 leading-[15px] space-y-0.5">
+                  {heading && <p className="font-medium text-gray-700">{heading}</p>}
                   {items.length > 0 && (
                     <ul className="list-disc list-inside space-y-0.5">
                       {items.map((d, i) => (
@@ -364,41 +359,40 @@ function SubjectDetailPage({ subject, grade, criteriaDescriptors, gradeLevel, st
       })}
 
       {/* Total & Grade rekap */}
-      <div className="mt-8 border-t-2 border-primary-200 pt-5">
+      <div className="mt-4 border-t-2 border-primary-200 pt-3" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
         <div className="flex items-center justify-between">
           {/* Grade boxes on the left */}
-          <div className="flex gap-2.5">
+          <div className="flex gap-2">
             {/* MYP Grade box - colored per boundary */}
-            <div className={`rounded-md border-2 ${getGradeBorderColor(finalGrade)} px-3 py-2 text-center w-24 ${getGradeBadgeClasses(finalGrade)}`}>
-              <p className="text-[9px] font-semibold uppercase tracking-wider opacity-70 mb-0.5">MYP Grade</p>
-              <p className="text-xl font-bold">{finalGrade}</p>
+            <div className={`rounded-md border-2 ${getGradeBorderColor(finalGrade)} px-2.5 py-1.5 text-center w-20 ${getGradeBadgeClasses(finalGrade)}`}>
+              <p className="text-[8px] font-semibold uppercase tracking-wider opacity-70 mb-0.5">MYP Grade</p>
+              <p className="text-lg font-bold">{finalGrade}</p>
             </div>
             {/* Local Grade box */}
-            <div className="bg-warm-50 border border-warm-200 rounded-md px-3 py-2 text-center w-24">
-              <p className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Local Grade</p>
-              <p className="text-xl font-bold text-primary-800">{localGrade}</p>
+            <div className="bg-warm-50 border border-warm-200 rounded-md px-2.5 py-1.5 text-center w-20">
+              <p className="text-[8px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Local Grade</p>
+              <p className="text-lg font-bold text-primary-800">{localGrade}</p>
             </div>
           </div>
           {/* Total score on the right */}
           <div className="text-right">
-            <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-0.5">Total Score</p>
-            <p className="text-2xl font-bold text-primary-800">{total} <span className="text-xs text-gray-400 font-normal">/ {maxScore}</span></p>
+            <p className="text-[11px] font-bold text-gray-600 uppercase tracking-wider mb-0.5">Total Score</p>
+            <p className="text-xl font-bold text-primary-800">{total} <span className="text-xs text-gray-400 font-normal">/ {maxScore}</span></p>
           </div>
         </div>
       </div>
 
       {/* Boundary reference mini-table */}
-      <div className="mt-5">
-        <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-1.5">Grade Boundary Reference</p>
-        <div className="flex gap-1.5">
+      <div className="mt-3" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <p className="text-[9px] text-gray-400 uppercase tracking-wider font-semibold mb-1">Grade Boundary Reference</p>
+        <div className="flex gap-1">
           {scaledBoundaries.map(b => (
             <div
               key={b.grade}
-              className={`flex-1 text-center py-1 rounded text-[10px] font-medium border ${
-                b.grade === finalGrade
+              className={`flex-1 text-center py-0.5 rounded text-[9px] font-medium border ${b.grade === finalGrade
                   ? getGradeBadgeClasses(b.grade) + ' ' + getGradeBorderColor(b.grade) + ' ring-2 ring-offset-1 ring-primary-300'
                   : 'bg-gray-50 text-gray-400 border-gray-200'
-              }`}
+                }`}
             >
               <div className="font-bold">{b.grade}</div>
               <div>{b.min}-{b.max}</div>
@@ -415,40 +409,40 @@ function SubjectDetailPage({ subject, grade, criteriaDescriptors, gradeLevel, st
 function LearnerProfilePage({ learnerProfiles, logo, studentName, nis, studentClass, semester, academicYear, pageNum, totalPages, schoolName }) {
   return (
     <ReportPage pageNum={pageNum} totalPages={totalPages} studentName={studentName} nis={nis} studentClass={studentClass} semester={semester} academicYear={academicYear}>
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-bold text-primary-800 tracking-wide">IB Learner Profile</h2>
+      <div className="text-center mb-3" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <h2 className="text-base font-bold text-primary-800 tracking-wide">IB Learner Profile</h2>
         {logo && (
-          <div className="flex justify-center my-2">
-            <img src={logo} alt="IB Learner Profile" className="w-50 h-50 object-contain" />
+          <div className="flex justify-center my-1.5">
+            <img src={logo} alt="IB Learner Profile" className="max-h-16 w-auto object-contain" />
           </div>
         )}
-        <p className="text-[11px] text-gray-500 mt-1 italic leading-relaxed max-w-lg mx-auto">
+        <p className="text-[10px] text-gray-500 mt-0.5 italic leading-relaxed max-w-md mx-auto">
           The aim of all IB programmes is to develop internationally minded people who, recognizing their common humanity and shared guardianship of the planet, help to create a better and more peaceful world.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-1.5" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
         {learnerProfiles.map((lp, idx) => (
-          <div key={lp.name} className="border border-gray-200 rounded-md px-2.5 py-2 bg-gray-50/50">
+          <div key={lp.name} className="border border-gray-200 rounded-md px-2 py-1.5 bg-gray-50/50">
             <div className="flex items-center gap-1.5 mb-0.5">
-              <span className="flex items-center justify-center w-5 h-5 bg-primary-100 text-primary-700 rounded-full text-[10px] font-bold shrink-0">
+              <span className="flex items-center justify-center w-4 h-4 bg-primary-100 text-primary-700 rounded-full text-[9px] font-bold shrink-0">
                 {idx + 1}
               </span>
-              <h3 className="text-[11px] font-bold text-primary-800">{lp.name}</h3>
+              <h3 className="text-[10px] font-bold text-primary-800">{lp.name}</h3>
             </div>
-            <p className="text-[9px] text-gray-600 leading-[13px] pl-[26px]">{lp.description}</p>
+            <p className="text-[8.5px] text-gray-600 leading-[12px] pl-[22px]">{lp.description}</p>
           </div>
         ))}
       </div>
 
-      <div className="mt-4 text-center">
-        <div className="inline-block border-t border-gray-200 pt-3 px-8">
-          <p className="text-[9px] text-gray-400 italic leading-relaxed">
+      <div className="mt-3 text-center" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+        <div className="inline-block border-t border-gray-200 pt-2 px-6">
+          <p className="text-[8.5px] text-gray-400 italic leading-relaxed">
             &ldquo;The IB continuum of international education encourages students across the world to become
             active, compassionate and lifelong learners who understand that other people, with their differences,
             can also be right.&rdquo;
           </p>
-          <p className="text-[9px] text-gray-400 mt-1.5 font-medium">{schoolName}</p>
+          <p className="text-[9px] text-gray-400 mt-1 font-medium">{schoolName}</p>
         </div>
       </div>
     </ReportPage>
@@ -471,6 +465,7 @@ export default function Report() {
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [printingStudentId, setPrintingStudentId] = useState(null);
+  const [autoDownload, setAutoDownload] = useState(false);
   const [myHomeroomClass, setMyHomeroomClass] = useState(null);
   const [gradeBoundaries, setGradeBoundaries] = useState([]);
 
@@ -478,7 +473,7 @@ export default function Report() {
   useEffect(() => {
     api.getGradeBoundaries()
       .then(data => setGradeBoundaries(data))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const activeYearStr = activeYear?.year || '2025/2026';
@@ -497,7 +492,7 @@ export default function Report() {
             setSelectedClass(t.homeroom);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
     // Auto-select for students — find their own record and auto-select
     if (currentUser?.role === 'student') {
@@ -548,10 +543,37 @@ export default function Report() {
     [students, printingStudentId]
   );
 
-  // Gather subject grades for printing student
+  // Determine student numeric grade level (e.g. 7, 8, 9)
+  const studentGradeLevel = useMemo(() => {
+    if (printingStudent?.class) {
+      const p = parseInt(printingStudent.class, 10);
+      if (!isNaN(p)) return p;
+    }
+    if (selectedGrade) {
+      const p = parseInt(selectedGrade, 10);
+      if (!isNaN(p)) return p;
+    }
+    return null;
+  }, [printingStudent, selectedGrade]);
+
+  // Filter subjects applicable to student's grade level based on availableGrades
+  const applicableSubjects = useMemo(() => {
+    if (!studentGradeLevel) return subjects;
+    return subjects.filter(sub => {
+      if (!sub.availableGrades) return true;
+      let av = sub.availableGrades;
+      if (typeof av === 'string') {
+        try { av = JSON.parse(av); } catch { return true; }
+      }
+      if (!Array.isArray(av) || av.length === 0) return true;
+      return av.some(g => Number(g) === studentGradeLevel);
+    });
+  }, [subjects, studentGradeLevel]);
+
+  // Gather subject grades for printing student (only for subjects available in student's grade)
   const subjectGrades = useMemo(() => {
     if (!printingStudent) return [];
-    return subjects.map(sub => {
+    return applicableSubjects.map(sub => {
       const g = grades.find(
         gr =>
           gr.studentId === printingStudent.id &&
@@ -564,7 +586,7 @@ export default function Report() {
         shortName: sub.shortName,
         name: sub.name,
         category: sub.category,
-        criteriaCount: getCriteriaCount(sub, printingStudent ? parseInt(printingStudent.class) : null),
+        criteriaCount: getCriteriaCount(sub, studentGradeLevel),
         scoreA: g?.scoreA ?? 0,
         scoreB: g?.scoreB ?? 0,
         scoreC: g?.scoreC ?? 0,
@@ -572,7 +594,7 @@ export default function Report() {
         hasGrade: !!g,
       };
     });
-  }, [printingStudent, subjects, grades, activeSemester, activeYearStr]);
+  }, [printingStudent, applicableSubjects, grades, activeSemester, activeYearStr, studentGradeLevel]);
 
   const subjectsWithGrades = useMemo(
     () => subjectGrades.filter(sg => sg.hasGrade),
@@ -604,12 +626,19 @@ export default function Report() {
     return 3 + subjectsWithGrades.length + 1;
   }, [printingStudent, subjectsWithGrades]);
 
+  const handleDownload = (studentId) => {
+    setAutoDownload(true);
+    setPrintingStudentId(studentId);
+  };
+
   const handlePrint = (studentId) => {
+    setAutoDownload(false);
     setPrintingStudentId(studentId);
     setTimeout(() => window.print(), 500);
   };
 
   const handlePreview = (studentId) => {
+    setAutoDownload(false);
     setPrintingStudentId(prev => prev === studentId ? null : studentId);
   };
 
@@ -653,59 +682,59 @@ export default function Report() {
 
       {/* Filter panel — hidden for students; simplified for homeroom */}
       {currentUser?.role !== 'student' && (
-      <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-5">
-        {currentUser?.role === 'homeroom' ? (
-          // Wali kelas: tampilkan badge kelas terkunci (tidak perlu pilih grade/kelas)
-          <div className="flex items-center gap-3">
-            <Lock size={14} className="text-primary-400 shrink-0" />
-            <span className="text-xs text-gray-500">Menampilkan rapor untuk kelas wali Anda:</span>
-            <span className="px-2.5 py-1 bg-primary-100 text-primary-700 text-xs font-bold rounded-lg">
-              {myHomeroomClass || 'Memuat...'}
-            </span>
-            <div className="ml-auto flex items-center gap-2 text-xs text-gray-500">
-              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{activeYearStr}</span>
-              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{getSemesterLabel(activeYear, activeSemester)}</span>
-            </div>
-          </div>
-        ) : (
-          // Admin/koordinator: filter lengkap Grade + Kelas
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
-            {/* Grade filter */}
-            <div className="flex-1 max-w-[200px]">
-              <label className={labelCls}>Pilih Grade</label>
-              <div className="relative">
-                <select value={selectedGrade} onChange={e => handleGradeChange(e.target.value)} className={inputCls}>
-                  <option value="">-- Pilih Grade --</option>
-                  {GRADE_OPTIONS.map(g => (
-                    <option key={g} value={g}>Grade {g}</option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <div className="bg-white rounded-xl border border-warm-200 shadow-sm p-5">
+          {currentUser?.role === 'homeroom' ? (
+            // Wali kelas: tampilkan badge kelas terkunci (tidak perlu pilih grade/kelas)
+            <div className="flex items-center gap-3">
+              <Lock size={14} className="text-primary-400 shrink-0" />
+              <span className="text-xs text-gray-500">Menampilkan rapor untuk kelas wali Anda:</span>
+              <span className="px-2.5 py-1 bg-primary-100 text-primary-700 text-xs font-bold rounded-lg">
+                {myHomeroomClass || 'Memuat...'}
+              </span>
+              <div className="ml-auto flex items-center gap-2 text-xs text-gray-500">
+                <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{activeYearStr}</span>
+                <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{getSemesterLabel(activeYear, activeSemester)}</span>
               </div>
             </div>
+          ) : (
+            // Admin/koordinator: filter lengkap Grade + Kelas
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+              {/* Grade filter */}
+              <div className="flex-1 max-w-[200px]">
+                <label className={labelCls}>Pilih Grade</label>
+                <div className="relative">
+                  <select value={selectedGrade} onChange={e => handleGradeChange(e.target.value)} className={inputCls}>
+                    <option value="">-- Pilih Grade --</option>
+                    {GRADE_OPTIONS.map(g => (
+                      <option key={g} value={g}>Grade {g}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
 
-            {/* Class filter */}
-            <div className="flex-1 max-w-[200px]">
-              <label className={labelCls}>Pilih Kelas</label>
-              <div className="relative">
-                <select value={selectedClass} onChange={e => handleClassChange(e.target.value)} className={inputCls} disabled={!selectedGrade}>
-                  <option value="">-- Pilih Kelas --</option>
-                  {filteredClasses.map(c => (
-                    <option key={c.id} value={c.name}>{c.name}</option>
-                  ))}
-                </select>
-                <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              {/* Class filter */}
+              <div className="flex-1 max-w-[200px]">
+                <label className={labelCls}>Pilih Kelas</label>
+                <div className="relative">
+                  <select value={selectedClass} onChange={e => handleClassChange(e.target.value)} className={inputCls} disabled={!selectedGrade}>
+                    <option value="">-- Pilih Kelas --</option>
+                    {filteredClasses.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Active info */}
+              <div className="flex items-center gap-2 text-xs text-gray-500 pb-1">
+                <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{activeYearStr}</span>
+                <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{getSemesterLabel(activeYear, activeSemester)}</span>
               </div>
             </div>
-
-            {/* Active info */}
-            <div className="flex items-center gap-2 text-xs text-gray-500 pb-1">
-              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{activeYearStr}</span>
-              <span className="px-2.5 py-1 bg-warm-100 rounded-lg font-medium">{getSemesterLabel(activeYear, activeSemester)}</span>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       )}
 
       {/* Student table */}
@@ -730,48 +759,43 @@ export default function Report() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">No</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">NISN</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-24">Gender</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-40">Aksi</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-28 whitespace-nowrap">Gender</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-44 whitespace-nowrap">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-warm-100">
                   {filteredStudents.map((student, idx) => (
                     <tr
                       key={student.id}
-                      className={`transition-colors duration-150 ${
-                        printingStudentId === student.id ? 'bg-primary-50' : 'hover:bg-warm-50/50'
-                      }`}
+                      className={`transition-colors duration-150 ${printingStudentId === student.id ? 'bg-primary-50' : 'hover:bg-warm-50/50'
+                        }`}
                     >
                       <td className="px-4 py-3 text-gray-400 text-xs">{idx + 1}</td>
                       <td className="px-4 py-3 text-gray-600 font-mono text-xs">{student.nis}</td>
                       <td className="px-4 py-3">
                         <p className="text-sm font-medium text-gray-800">{student.name}</p>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         {student.gender === 'L'
-                          ? <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700">Laki-laki</span>
-                          : <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-pink-50 text-pink-700">Perempuan</span>
+                          ? <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-blue-50 text-blue-700 whitespace-nowrap">Laki-laki</span>
+                          : <span className="inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full bg-pink-50 text-pink-700 whitespace-nowrap">Perempuan</span>
                         }
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">
                           <button
                             onClick={() => handlePreview(student.id)}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5
-                              ${printingStudentId === student.id
-                                ? 'bg-primary-600 text-white'
-                                : 'bg-primary-50 text-primary-700 hover:bg-primary-100'
-                              }`}
+                            className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5 bg-primary-50 text-primary-700 hover:bg-primary-100"
                             title="Preview rapor"
                           >
                             <FileText size={13} /> Rapor
                           </button>
                           <button
-                            onClick={() => handlePrint(student.id)}
-                            className="px-3 py-1.5 text-xs font-medium bg-warm-100 text-gray-600 hover:bg-warm-200 rounded-lg transition-all duration-200 flex items-center gap-1.5"
-                            title="Print rapor"
+                            onClick={() => handleDownload(student.id)}
+                            className="px-3 py-1.5 text-xs font-semibold bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-all duration-200 flex items-center gap-1.5 shadow-xs active:scale-95"
+                            title={`Download PDF rapor ${student.name}`}
                           >
-                            <Printer size={13} /> Print
+                            <Download size={13} /> PDF
                           </button>
                         </div>
                       </td>
@@ -816,8 +840,8 @@ export default function Report() {
                 <FileText size={15} /> Preview
               </button>
               <button
-                onClick={() => handlePrint(printingStudent.id)}
-                className="px-4 py-2 text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-all duration-200 flex items-center gap-1.5 shadow-sm"
+                onClick={() => handleDownload(printingStudent.id)}
+                className="px-4 py-2 text-sm font-semibold bg-primary-600 text-white hover:bg-primary-700 rounded-lg transition-all duration-200 flex items-center gap-1.5 shadow-sm active:scale-95"
               >
                 <Download size={15} /> Download PDF
               </button>
@@ -836,9 +860,13 @@ export default function Report() {
       {/* Report preview modal */}
       <ReportPreviewModal
         isOpen={printingStudent !== null && printingStudent !== undefined}
-        onClose={() => setPrintingStudentId(null)}
+        onClose={() => {
+          setPrintingStudentId(null);
+          setAutoDownload(false);
+        }}
         student={printingStudent}
         totalPages={totalPages}
+        autoDownload={autoDownload}
         onPrint={() => window.print()}
       >
         {/* Page 1: Cover Letter */}

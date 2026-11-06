@@ -234,8 +234,8 @@ export default function TeacherDashboard() {
                     <td className="px-4 py-2 text-center">
                       <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full bg-primary-50 text-primary-700">{student.class}</span>
                     </td>
-                    <td className="px-4 py-2 text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${student.gender === 'L' ? 'bg-blue-50 text-blue-700' : 'bg-pink-50 text-pink-700'}`}>
+                    <td className="px-4 py-2 text-center whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${student.gender === 'L' ? 'bg-blue-50 text-blue-700' : 'bg-pink-50 text-pink-700'}`}>
                         {student.gender === 'L' ? 'Laki-laki' : 'Perempuan'}
                       </span>
                     </td>

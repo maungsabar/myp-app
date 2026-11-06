@@ -373,7 +373,7 @@ export default function PromoteClass() {
                     <p className="text-sm font-medium text-gray-800 truncate">{student.name}</p>
                     <p className="text-xs text-gray-400">NISN: {student.nis}</p>
                   </div>
-                  <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full ${student.gender === 'L' ? 'bg-blue-50 text-blue-700' : 'bg-pink-50 text-pink-700'}`}>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 text-xs font-medium rounded-full whitespace-nowrap shrink-0 ${student.gender === 'L' ? 'bg-blue-50 text-blue-700' : 'bg-pink-50 text-pink-700'}`}>
                     {student.gender === 'L' ? 'Laki-laki' : 'Perempuan'}
                   </span>
                 </label>

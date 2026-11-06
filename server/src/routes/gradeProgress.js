@@ -55,8 +55,17 @@ router.get('/', async (req, res) => {
     // Build class-level progress data
     const classProgress = classes.map(cls => {
       const classStudents = studentsByClass[cls.name] || [];
-      const totalStudents = classStudents.length;
-      const totalSubjects = subjects.length;
+      // Filter subjects applicable to this class level
+      const classSubjects = subjects.filter(sub => {
+        if (!sub.availableGrades) return true;
+        let av = sub.availableGrades;
+        if (typeof av === 'string') {
+          try { av = JSON.parse(av); } catch { return true; }
+        }
+        if (!Array.isArray(av) || av.length === 0) return true;
+        return av.some(g => Number(g) === Number(cls.level));
+      });
+      const totalSubjects = classSubjects.length;
 
       if (totalStudents === 0 || totalSubjects === 0) {
         return {
@@ -80,7 +89,7 @@ router.get('/', async (req, res) => {
       const progressPercent = totalPossible > 0 ? Math.round((gradedCount / totalPossible) * 100) : 0;
 
       // Build per-subject progress
-      const subjectProgress = subjects.map(sub => {
+      const subjectProgress = classSubjects.map(sub => {
         const subjectGrades = classGrades.filter(g => g.subjectId === sub.id);
         const gradedStudents = subjectGrades.length;
         const subPercent = totalStudents > 0 ? Math.round((gradedStudents / totalStudents) * 100) : 0;

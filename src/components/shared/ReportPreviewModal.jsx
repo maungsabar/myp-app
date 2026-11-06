@@ -1,11 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Printer, FileText, GraduationCap, ChevronDown, ChevronUp, Maximize2, Minimize2 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { X, Printer, Download, GraduationCap, ChevronDown, ChevronUp, Maximize2, Loader2, CheckCircle2 } from 'lucide-react';
+import { downloadReportAsPdf } from '../../utils/pdfDownloader';
 
-export default function ReportPreviewModal({ isOpen, onClose, student, totalPages, onPrint, children }) {
+export default function ReportPreviewModal({ isOpen, onClose, student, totalPages, onPrint, autoDownload = false, children }) {
   const [scale, setScale] = useState(0.7);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(null);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
   const scrollRef = useRef(null);
+  const reportContentRef = useRef(null);
+
+  const cleanClass = (student?.class || '').trim();
+  const cleanName = (student?.name || '').trim();
+  const rawTitle = cleanClass ? `${cleanClass}_${cleanName}` : cleanName;
+  const pdfTitle = rawTitle.replace(/[/\\?%*:|"<>]/g, '_').trim() || 'Rapor_Siswa';
 
   useEffect(() => {
     if (isOpen) {
@@ -15,21 +24,40 @@ export default function ReportPreviewModal({ isOpen, onClose, student, totalPage
       // A4 is ~794px wide. Leave some padding.
       const idealScale = Math.min(0.85, (vw - 80) / 794);
       setScale(Math.max(0.4, idealScale));
+      setDownloadSuccess(false);
     } else {
       document.body.style.overflow = '';
+      setIsDownloading(false);
+      setDownloadProgress(null);
+      setDownloadSuccess(false);
     }
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
+
+  // Set document title dynamically
+  useEffect(() => {
+    if (isOpen && student) {
+      const prevTitle = 'MTs-MILBoS-MYP Report';
+      document.title = pdfTitle;
+      const titleEl = document.querySelector('title');
+      if (titleEl) titleEl.textContent = pdfTitle;
+
+      return () => {
+        document.title = prevTitle;
+        if (titleEl) titleEl.textContent = prevTitle;
+      };
+    }
+  }, [isOpen, student, pdfTitle]);
 
   // Keyboard: Escape to close
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !isDownloading) onClose();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, isDownloading]);
 
   // Reset scroll on open
   useEffect(() => {
@@ -37,6 +65,38 @@ export default function ReportPreviewModal({ isOpen, onClose, student, totalPage
       scrollRef.current.scrollTop = 0;
     }
   }, [isOpen]);
+
+  const handleDownload = async () => {
+    if (!reportContentRef.current || isDownloading) return;
+    setIsDownloading(true);
+    setDownloadProgress({ current: 1, total: totalPages || 1 });
+
+    try {
+      await downloadReportAsPdf(
+        reportContentRef.current,
+        pdfTitle,
+        (current, total) => setDownloadProgress({ current, total })
+      );
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 4000);
+    } catch (err) {
+      console.error('Download PDF error:', err);
+      alert('Gagal mendownload PDF: ' + (err.message || 'Terjadi kesalahan sistem'));
+    } finally {
+      setIsDownloading(false);
+      setDownloadProgress(null);
+    }
+  };
+
+  // If autoDownload prop triggered, download after brief render timeout
+  useEffect(() => {
+    if (isOpen && autoDownload && student && !isDownloading) {
+      const timer = setTimeout(() => {
+        handleDownload();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, autoDownload, student]);
 
   if (!isOpen || !student) return null;
 
@@ -70,19 +130,22 @@ export default function ReportPreviewModal({ isOpen, onClose, student, totalPage
           {/* Center: Zoom controls */}
           <div className="hidden sm:flex items-center gap-1 bg-warm-100 rounded-lg px-1 py-0.5">
             <button onClick={handleZoomOut}
-              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-warm-200 rounded transition-all"
+              disabled={isDownloading}
+              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-warm-200 rounded transition-all disabled:opacity-50"
               title="Zoom Out">
               <ChevronDown size={14} />
             </button>
             <span className="text-xs font-medium text-gray-600 w-12 text-center">{Math.round(scale * 100)}%</span>
             <button onClick={handleZoomIn}
-              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-warm-200 rounded transition-all"
+              disabled={isDownloading}
+              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-warm-200 rounded transition-all disabled:opacity-50"
               title="Zoom In">
               <ChevronUp size={14} />
             </button>
             <div className="w-px h-4 bg-warm-300 mx-0.5" />
             <button onClick={handleFitWidth}
-              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-warm-200 rounded transition-all"
+              disabled={isDownloading}
+              className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-warm-200 rounded transition-all disabled:opacity-50"
               title="Fit Width">
               <Maximize2 size={13} />
             </button>
@@ -90,30 +153,84 @@ export default function ReportPreviewModal({ isOpen, onClose, student, totalPage
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Primary Direct Download PDF Button */}
+            <button
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg transition-all duration-200 shadow-sm
+                ${downloadSuccess 
+                  ? 'bg-emerald-700' 
+                  : isDownloading 
+                    ? 'bg-primary-500 cursor-not-allowed opacity-90' 
+                    : 'bg-primary-600 hover:bg-primary-700 active:scale-95'
+                }`}
+              title={`Download PDF dengan nama ${pdfTitle}.pdf`}
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>
+                    {downloadProgress 
+                      ? `Memproses Hal. ${downloadProgress.current}/${downloadProgress.total}...` 
+                      : 'Memproses PDF...'}
+                  </span>
+                </>
+              ) : downloadSuccess ? (
+                <>
+                  <CheckCircle2 size={16} className="text-emerald-200" />
+                  <span>Berhasil Diunduh!</span>
+                </>
+              ) : (
+                <>
+                  <Download size={16} />
+                  <span>Download PDF</span>
+                </>
+              )}
+            </button>
+
+            {/* Secondary Print Button for direct paper printer */}
             <button
               onClick={onPrint}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all duration-200 shadow-sm"
+              disabled={isDownloading}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-warm-100 hover:bg-warm-200 hover:text-gray-800 rounded-lg transition-all duration-200 disabled:opacity-50"
+              title="Cetak via printer fisik"
             >
               <Printer size={15} />
-              <span className="hidden sm:inline">Print / Save PDF</span>
-              <span className="sm:hidden">Print</span>
+              <span>Cetak</span>
             </button>
+
+            {/* Close Button */}
             <button onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-warm-100 rounded-lg transition-all duration-200"
+              disabled={isDownloading}
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-warm-100 rounded-lg transition-all duration-200 disabled:opacity-50"
               title="Tutup (Esc)">
               <X size={18} />
             </button>
           </div>
         </div>
+
+        {/* Feedback / notification strip during processing */}
+        {isDownloading && (
+          <div className="bg-primary-50 border-t border-primary-200 px-5 py-1.5 text-xs text-primary-800 flex items-center justify-between print:hidden">
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-primary-600 animate-pulse" />
+              Menyiapkan dokumen <strong>{pdfTitle}.pdf</strong>... Dokumen akan langsung tersimpan di folder unduhan.
+            </span>
+            <span className="font-semibold text-primary-900">
+              {downloadProgress ? `${Math.round((downloadProgress.current / downloadProgress.total) * 100)}%` : '0%'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Preview area ── */}
       <div
         ref={scrollRef}
         className="flex-1 overflow-auto print-scroll"
-        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        onClick={(e) => { if (e.target === e.currentTarget && !isDownloading) onClose(); }}
       >
         <div
+          ref={reportContentRef}
           className="py-8 flex flex-col items-center print-preview"
           style={{
             transform: `scale(${scale})`,
@@ -126,14 +243,14 @@ export default function ReportPreviewModal({ isOpen, onClose, student, totalPage
       </div>
 
       {/* ── Bottom status bar ── */}
-      <div className="relative z-10 bg-white/90 backdrop-blur border-t border-warm-200 px-5 py-2 flex items-center justify-between text-xs text-gray-400 print-status">
+      <div className="relative z-10 bg-white/90 backdrop-blur border-t border-warm-200 px-5 py-2 flex items-center justify-between text-xs text-gray-400 print:status">
         <div className="flex items-center gap-2">
           <GraduationCap size={13} />
-          <span>MYP Report Card Preview</span>
+          <span>Nama File Otomatis: <strong className="text-gray-600 font-mono">{pdfTitle}.pdf</strong></span>
         </div>
         <div className="flex items-center gap-3">
           <span>Zoom: {Math.round(scale * 100)}%</span>
-          <span>Pages: {totalPages}</span>
+          <span>{totalPages} Halaman</span>
           <span className="hidden sm:inline text-gray-300">Tekan Esc untuk menutup</span>
         </div>
       </div>
