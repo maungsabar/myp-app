@@ -33,7 +33,7 @@ function getGradeBorderColor(grade) {
 function ReportPage({ pageNum, totalPages, studentName, nis, studentClass, semester, academicYear, children }) {
   const { activeYear, getSemesterLabel, getReportPrintDate } = useApp();
   const semesterLabel = getSemesterLabel(activeYear, semester);
-  const printDate = getReportPrintDate ? getReportPrintDate(semester) : `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][new Date().getMonth()]} ${new Date().getFullYear()}`;
+  const printDate = getReportPrintDate ? getReportPrintDate(semester) : `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][new Date().getMonth()]} ${new Date().getDate()}, ${new Date().getFullYear()}`;
 
   return (
     <div className="relative bg-white shadow-lg border border-gray-200 rounded-sm mx-auto mb-8 report-page"
@@ -61,53 +61,354 @@ function ReportPage({ pageNum, totalPages, studentName, nis, studentClass, semes
   );
 }
 
+/* ── PAGE 0 : Front Cover / Sampul Rapor ─────────────────────────── */
+
+function CoverOrnamentalDivider({ className = '' }) {
+  return (
+    <div className={`flex items-center justify-center w-full ${className}`}>
+      <svg
+        viewBox="0 0 500 18"
+        className="w-4/5 max-w-[420px] h-4 overflow-visible"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Left tapered wing */}
+        <polygon points="0,9 228,7.2 228,10.8" fill="#0d233a" />
+        {/* Right tapered wing */}
+        <polygon points="500,9 272,7.2 272,10.8" fill="#0d233a" />
+        {/* Left small accent diamond */}
+        <polygon points="231,9 236,6 241,9 236,12" fill="#0d233a" />
+        {/* Right small accent diamond */}
+        <polygon points="259,9 264,6 269,9 264,12" fill="#0d233a" />
+        {/* Center outer gold diamond */}
+        <polygon points="241,9 250,1.5 259,9 250,16.5" fill="#c5a869" />
+        {/* Center inner navy diamond */}
+        <polygon points="244,9 250,4 256,9 250,14" fill="#0d233a" />
+      </svg>
+    </div>
+  );
+}
+
+const ISLAMIC_PATTERN_BG = `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d6d1c4' stroke-width='0.7' stroke-opacity='0.45'%3E%3Cpolygon points='40,4 49,22 68,12 58,31 76,40 58,49 68,68 49,58 40,76 31,58 12,68 22,49 4,40 22,31 12,12 31,22'/%3E%3Ccircle cx='40' cy='40' r='14'/%3E%3Crect x='22' y='22' width='36' height='36' transform='rotate(45 40 40)'/%3E%3C/g%3E%3C/svg%3E")`;
+
+function FrontCoverPage({
+  schoolProfile,
+  student,
+  semester,
+  academicYear,
+  gradeLevel,
+  homeroomTeacherName,
+  printDate,
+  ibProfileLogo,
+  coverConfig,
+}) {
+  const cfg = coverConfig || {};
+  const title = cfg.title || 'ACADEMIC REPORT CARD';
+  const subtitle = cfg.subtitle || 'MIDDLE YEARS PROGRAMME';
+  const rawMotto = cfg.motto;
+  const motto = (!rawMotto || rawMotto === 'Inquire - Think - Grow') ? 'Inquire-Act-Reflect' : rawMotto;
+  const showMotto = cfg.showMotto !== false;
+  const leftLogo = cfg.leftLogo || schoolProfile?.logo;
+  const centerVisual = cfg.customVisual || ibProfileLogo;
+
+  const defaultMypYear = gradeLevel ? `Grade ${gradeLevel} / MYP Year ${Number(gradeLevel) - 5}` : 'Grade 7 / MYP Year 2';
+  const mypYearLabel = cfg.mypYearMap?.[gradeLevel] || defaultMypYear;
+  const gradeDisplay = student?.class ? `${mypYearLabel} (${student.class})` : mypYearLabel;
+
+  const contactParts = [
+    cfg.website?.trim(),
+    schoolProfile?.phone ? `Telp: ${schoolProfile.phone}` : null,
+    schoolProfile?.email ? `Email: ${schoolProfile.email}` : null,
+  ].filter(Boolean);
+
+  const profileRows = [
+    { label: 'Student Full Name', value: student?.name || '-', boldValue: true, shaded: true },
+    { label: 'Student ID Number', value: student?.nis || '-', boldValue: false, shaded: false },
+    { label: 'Grade / MYP Year', value: gradeDisplay, boldValue: false, shaded: true },
+    { label: 'Homeroom Teacher', value: homeroomTeacherName || '-', boldValue: false, shaded: false },
+    { label: 'Date of Issue', value: printDate || '-', boldValue: false, shaded: true },
+  ];
+
+  return (
+    <div
+      className="relative shadow-lg border border-gray-200 rounded-sm mx-auto mb-8 report-page overflow-hidden"
+      style={{
+        width: '210mm',
+        minHeight: '297mm',
+        height: '297mm',
+        padding: '9mm',
+        backgroundColor: '#f8f7f3',
+        backgroundImage: ISLAMIC_PATTERN_BG,
+        fontFamily: "'Montserrat', sans-serif",
+      }}
+    >
+      {/* Inner Card Frame with Gold Border */}
+      <div
+        className="w-full h-full flex flex-col justify-between relative"
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.94)',
+          border: '1.5px solid #c5a869',
+          boxShadow: '0 2px 14px rgba(0, 0, 0, 0.05)',
+          padding: '13mm 14mm 11mm 14mm',
+        }}
+      >
+        {/* 1. Top Logos: School Logo (Left) & Official MYP / Custom Logo (Right) */}
+        <div className="flex items-center justify-between gap-6">
+          <div className="h-20 flex items-center">
+            {leftLogo ? (
+              <img
+                src={leftLogo}
+                alt="Logo Sekolah"
+                className="max-h-20 max-w-[235px] w-auto object-contain"
+              />
+            ) : (
+              <div className="px-4 py-2.5 border border-dashed border-gray-300 rounded text-xs font-bold text-gray-400">
+                {schoolProfile?.name || 'LOGO SEKOLAH'}
+              </div>
+            )}
+          </div>
+
+          <div className="h-20 flex items-center justify-end">
+            {cfg.rightLogo ? (
+              <img
+                src={cfg.rightLogo}
+                alt="Logo MYP"
+                className="max-h-20 max-w-[260px] w-auto object-contain"
+              />
+            ) : (
+              <div className="px-4 py-2 border-2 border-[#0d233a] rounded text-right">
+                <div className="text-xs font-extrabold tracking-widest text-[#0d233a] uppercase">
+                  IB WORLD SCHOOL
+                </div>
+                <div className="text-[10px] font-semibold tracking-wider text-[#b08d44] uppercase mt-0.5">
+                  MIDDLE YEARS PROGRAMME
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 2. Report Title Block */}
+        <div className="text-center mt-2">
+          <h1
+            className="font-bold uppercase tracking-wider leading-tight"
+            style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: '30px',
+              color: '#0d233a',
+              letterSpacing: '0.04em',
+            }}
+          >
+            {title}
+          </h1>
+          <p
+            className="font-bold uppercase mt-1"
+            style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: '18px',
+              color: '#0d233a',
+              letterSpacing: '0.05em',
+            }}
+          >
+            {subtitle}
+          </p>
+
+          <div className="mt-3.5 space-y-0.5">
+            <p
+              className="font-bold uppercase"
+              style={{
+                fontSize: '15.5px',
+                color: '#b08d44',
+                letterSpacing: '0.05em',
+              }}
+            >
+              SEMESTER {semester} REPORT
+            </p>
+            <p
+              className="font-bold uppercase"
+              style={{
+                fontSize: '15.5px',
+                color: '#0d233a',
+                letterSpacing: '0.04em',
+              }}
+            >
+              ACADEMIC YEAR: {academicYear}
+            </p>
+          </div>
+
+          <CoverOrnamentalDivider className="mt-3.5" />
+        </div>
+
+        {/* 3. Student Profile Section */}
+        <div className="my-1 px-3">
+          <h2
+            className="text-center font-bold uppercase mb-3"
+            style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: '20px',
+              color: '#0d233a',
+              letterSpacing: '0.04em',
+            }}
+          >
+            STUDENT PROFILE
+          </h2>
+
+          <table className="w-full border-collapse" style={{ fontSize: '13.5px' }}>
+            <tbody>
+              {profileRows.map((row) => (
+                <tr
+                  key={row.label}
+                  style={{
+                    backgroundColor: row.shaded ? '#e6e8ea' : 'transparent',
+                    borderTop: row.shaded ? '1px solid #d1d5db' : 'none',
+                    borderBottom: row.shaded ? '1px solid #d1d5db' : 'none',
+                  }}
+                >
+                  <td className="py-2 pl-4 pr-2 font-medium text-gray-900 w-[37%]">
+                    {row.label}
+                  </td>
+                  <td className="py-2 px-2 font-semibold text-gray-800 w-5 text-center">
+                    :
+                  </td>
+                  <td
+                    className={`py-2 pl-1 pr-4 text-gray-900 ${
+                      row.boldValue ? 'font-bold uppercase tracking-wide' : 'font-medium'
+                    }`}
+                  >
+                    {row.value}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 4. Visual / Graphic: IB Learner Profile Wheel & Motto */}
+        <div className="my-1 flex flex-col items-center justify-center text-center">
+          {centerVisual ? (
+            <img
+              src={centerVisual}
+              alt="IB Learner Profile Visual"
+              className="max-h-[195px] w-auto object-contain mx-auto drop-shadow-xs"
+            />
+          ) : (
+            <div className="w-40 h-40 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center p-4 text-xs text-gray-400">
+              IB Learner Profile
+            </div>
+          )}
+
+          {showMotto && motto && (
+            <p
+              className="mt-2.5 italic"
+              style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                fontSize: '19px',
+                color: '#0d233a',
+              }}
+            >
+              &ldquo;{motto}&rdquo;
+            </p>
+          )}
+        </div>
+
+        {/* 5. Bottom Ornamental Divider & School Identity Footer */}
+        <div className="text-center">
+          <CoverOrnamentalDivider className="mb-3" />
+
+          <p
+            className="font-extrabold"
+            style={{
+              fontSize: '23px',
+              color: '#0d233a',
+              letterSpacing: '0.03em',
+            }}
+          >
+            {schoolProfile?.name === 'MTS MILBOS' ? 'MTs MILBoS' : (schoolProfile?.name || '')}
+          </p>
+
+          {schoolProfile?.address && (
+            <p className="text-xs font-medium text-gray-900 leading-relaxed mt-0.5">
+              {schoolProfile.address}
+            </p>
+          )}
+
+          {contactParts.length > 0 && (
+            <p className="text-xs font-medium text-gray-900 mt-0.5">
+              {contactParts.join(' • ')}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── PAGE 1 : Cover Letter ───────────────────────────────────────── */
 
-function CoverPage({ schoolProfile, student, semester, academicYear, pageNum, totalPages }) {
+function CoverPage({ schoolProfile, student, semester, academicYear, pageNum, totalPages, coverLetter }) {
+  const cl = coverLetter || {};
+  const salutation = cl.salutation || 'Dear Parents,';
+  const greeting = cl.greeting || 'Assalamu’alaikum warahmatullahi wabarakatuh,';
+  const defaultParagraphs = [
+    'Alhamdulillah, with gratitude to Allah ﷻ, we are pleased to share with you the MYP Semester Report for the academic year {academicYear}. This report is designed to provide you with a clear picture of your child’s learning progress across all subject groups within the Middle Years Programme (MYP).',
+    'Our aim is to help you, together with your child and their teachers, reflect on learning achievements and plan meaningful steps for continuous academic, personal, and spiritual growth in line with our vision of nurturing future Islamic leaders who embody the values of faith, knowledge, and good character (iman, ilmu, dan akhlak).',
+    'In the MYP, your child’s progress is assessed through criteria (up to A, B, C, D depending on the subject) for each subject. Each criterion is scored out of 8 points, and the total is converted to a final grade (1–7) according to MYP grade boundaries that are scaled to the number of criteria assessed.',
+    'At this stage of the academic year, some subjects may have assessed all four criteria, while others may have assessed fewer. Therefore, if a subject has not yet covered all four criteria, a final grade may not be awarded this semester.',
+    'You will also find teacher reflections on how your child has demonstrated the IB Learner Profile attributes, integrated with the values of Islam that guide our school culture. Details about grade boundaries and learner profiles are included at the end of this report.',
+    'We encourage you to use this report as a chance to celebrate progress and discuss areas for further improvement with your child. Should you wish to have a deeper conversation about your child’s development, you are warmly invited to make an appointment with the respective subject or homeroom teachers.',
+    'Thank you for your continuous support and partnership in your child’s educational journey.',
+  ];
+  const paragraphs = Array.isArray(cl.paragraphs) && cl.paragraphs.length > 0 ? cl.paragraphs : defaultParagraphs;
+  const closingGreeting = cl.closingGreeting || 'Wassalamu’alaikum warahmatullahi wabarakatuh,';
+  const closingSignoff = cl.closingSignoff || 'Kind regards,';
+  const principalTitle = cl.principalTitle || 'Principal';
+  const coordinatorTitle = cl.coordinatorTitle || 'MYP Coordinator';
+
   return (
     <ReportPage pageNum={pageNum} totalPages={totalPages} studentName={student.name} nis={student.nis} studentClass={student.class} semester={semester} academicYear={academicYear}>
       {/* Letter body */}
       <div className="text-xs leading-[1.65] text-gray-700 mb-4 space-y-2.5 text-justify">
-        <p className="font-semibold text-gray-800">Dear Parents,</p>
-        <p className="italic text-gray-600">Assalamu’alaikum warahmatullahi wabarakatuh,</p>
-        <p>
-          Alhamdulillah, with gratitude to Allah ﷻ, we are pleased to share with you the MYP Semester Report for the academic year {academicYear}. This report is designed to provide you with a clear picture of your child’s learning progress across all subject groups within the Middle Years Programme (MYP).
-        </p>
-        <p>
-          Our aim is to help you, together with your child and their teachers, reflect on learning achievements and plan meaningful steps for continuous academic, personal, and spiritual growth in line with our vision of nurturing future Islamic leaders who embody the values of faith, knowledge, and good character (iman, ilmu, dan akhlak).
-        </p>
-        <p>
-          In the MYP, your child’s progress is assessed through criteria (up to A, B, C, D depending on the subject) for each subject. Each criterion is scored out of 8 points, and the total is converted to a final grade (1–7) according to MYP grade boundaries that are scaled to the number of criteria assessed.
-        </p>
-        <p>
-          At this stage of the academic year, some subjects may have assessed all four criteria, while others may have assessed fewer. Therefore, if a subject has not yet covered all four criteria, a final grade may not be awarded this semester.
-        </p>
-        <p>
-          You will also find teacher reflections on how your child has demonstrated the IB Learner Profile attributes, integrated with the values of Islam that guide our school culture. Details about grade boundaries and learner profiles are included at the end of this report.
-        </p>
-        <p>
-          We encourage you to use this report as a chance to celebrate progress and discuss areas for further improvement with your child. Should you wish to have a deeper conversation about your child’s development, you are warmly invited to make an appointment with the respective subject or homeroom teachers.
-        </p>
-        <p>
-          Thank you for your continuous support and partnership in your child’s educational journey.
-        </p>
+        {salutation && <p className="font-semibold text-gray-800">{salutation}</p>}
+        {greeting && <p className="italic text-gray-600">{greeting}</p>}
+        {paragraphs.map((p, idx) => {
+          const text = p
+            .replace(/\{academicYear\}/g, academicYear)
+            .replace(/\{studentName\}/g, student.name || '');
+          return <p key={idx}>{text}</p>;
+        })}
       </div>
       <div className="text-xs leading-normal text-gray-700 space-y-1 mb-6">
-        <p className="italic text-gray-600">Wassalamu’alaikum warahmatullahi wabarakatuh,</p>
-        <p className="font-medium">Kind regards,</p>
+        {closingGreeting && <p className="italic text-gray-600">{closingGreeting}</p>}
+        {closingSignoff && <p className="font-medium">{closingSignoff}</p>}
       </div>
 
       {/* Signatures */}
       <div className="flex justify-between mt-6" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
         <div className="text-center w-48">
-          <div className="border-b border-gray-400 mb-1.5 h-12"></div>
+          <div className="border-b border-gray-400 mb-1.5 h-14 relative flex items-end justify-center pb-0.5">
+            {cl.principalSignature ? (
+              <img
+                src={cl.principalSignature}
+                alt="Principal Signature"
+                className="max-h-12 max-w-full object-contain mb-0.5"
+              />
+            ) : null}
+          </div>
           <p className="text-xs font-bold text-gray-800">{schoolProfile.principal}</p>
-          <p className="text-[11px] text-gray-500">Principal</p>
+          <p className="text-[11px] text-gray-500">{principalTitle}</p>
         </div>
         <div className="text-center w-48">
-          <div className="border-b border-gray-400 mb-1.5 h-12"></div>
+          <div className="border-b border-gray-400 mb-1.5 h-14 relative flex items-end justify-center pb-0.5">
+            {cl.coordinatorSignature ? (
+              <img
+                src={cl.coordinatorSignature}
+                alt="Coordinator Signature"
+                className="max-h-12 max-w-full object-contain mb-0.5"
+              />
+            ) : null}
+          </div>
           <p className="text-xs font-bold text-gray-800">{schoolProfile.mypCoordinator}</p>
-          <p className="text-[11px] text-gray-500">MYP Coordinator</p>
+          <p className="text-[11px] text-gray-500">{coordinatorTitle}</p>
         </div>
       </div>
 
@@ -156,8 +457,11 @@ function GuidelinesPage({ gradeBoundaries, studentName, nis, studentClass, semes
 
 /* ── PAGE 3 : Progress Summary ───────────────────────────────────── */
 
-function ProgressSummaryPage({ student, subjectGrades, attendance, homeroomComment, semester, academicYear, calculateGradeDynamic, getLocalGrade, pageNum, totalPages }) {
+function ProgressSummaryPage({ student, subjectGrades, attendance, homeroomComment, semester, academicYear, calculateGradeDynamic, getLocalGrade, showPresent, pageNum, totalPages }) {
   const allCriteria = ['A', 'B', 'C', 'D'];
+  const totalAttendance = attendance
+    ? (showPresent ? (attendance.present || 0) : 0) + (attendance.unexcused || 0) + (attendance.sick || 0) + (attendance.excused || 0)
+    : 0;
   return (
     <ReportPage pageNum={pageNum} totalPages={totalPages} studentName={student.name} nis={student.nis} studentClass={student.class} semester={semester} academicYear={academicYear}>
       <h2 className="text-base font-bold text-primary-800 mb-3 border-b border-primary-200 pb-1.5">
@@ -238,7 +542,9 @@ function ProgressSummaryPage({ student, subjectGrades, attendance, homeroomComme
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-3 py-1.5 text-center border border-gray-200">Present </th>
+                {showPresent && (
+                  <th className="px-3 py-1.5 text-center border border-gray-200">Present </th>
+                )}
                 <th className="px-3 py-1.5 text-center border border-gray-200">Unexcused </th>
                 <th className="px-3 py-1.5 text-center border border-gray-200">Sick </th>
                 <th className="px-3 py-1.5 text-center border border-gray-200">Excused </th>
@@ -247,11 +553,13 @@ function ProgressSummaryPage({ student, subjectGrades, attendance, homeroomComme
             </thead>
             <tbody>
               <tr>
-                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-emerald-700">{attendance.present}</td>
+                {showPresent && (
+                  <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-emerald-700">{attendance.present}</td>
+                )}
                 <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-red-600">{attendance.unexcused}</td>
                 <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-amber-600">{attendance.sick}</td>
                 <td className="px-3 py-1.5 text-center border border-gray-200 font-bold text-blue-600">{attendance.excused}</td>
-                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold">{attendance.present + attendance.unexcused + attendance.sick + attendance.excused}</td>
+                <td className="px-3 py-1.5 text-center border border-gray-200 font-bold">{totalAttendance}</td>
               </tr>
             </tbody>
           </table>
@@ -455,11 +763,11 @@ const GRADE_OPTIONS = [7, 8, 9];
 
 export default function Report() {
   const {
-    students, subjects, grades, attendances, homeroomComments, classes,
+    students, teachers, subjects, grades, attendances, homeroomComments, classes,
     schoolProfile, activeYear, criteriaDescriptors,
     calculateGrade, calculateGradeDynamic, getLocalGrade, getScaledBoundaries,
     learnerProfiles, ibProfileLogo, getGradeLevelKey, getSemesterLabel, currentUser,
-    getReportPrintDate,
+    getReportPrintDate, printSettings, coverLetter,
   } = useApp();
 
   const [selectedGrade, setSelectedGrade] = useState('');
@@ -621,10 +929,32 @@ export default function Report() {
     ) || null;
   }, [printingStudent, homeroomComments, activeSemester, activeYearStr]);
 
+  const homeroomTeacherName = useMemo(() => {
+    if (!printingStudent?.class) return homeroomComment?.teacherName || '-';
+    const cls = classes.find(c => c.name === printingStudent.class);
+    if (cls?.homeroomTeacherName) return cls.homeroomTeacherName;
+    if (cls?.homeroomTeacherId && Array.isArray(teachers)) {
+      const tById = teachers.find(t => t.id === cls.homeroomTeacherId);
+      if (tById?.name) return tById.name;
+    }
+    if (Array.isArray(teachers)) {
+      const tByClass = teachers.find(t => t.homeroom === printingStudent.class);
+      if (tByClass?.name) return tByClass.name;
+    }
+    return homeroomComment?.teacherName || '-';
+  }, [printingStudent, classes, teachers, homeroomComment]);
+
+  const coverEnabled = printSettings?.cover?.enabled !== false;
+
   const totalPages = useMemo(() => {
     if (!printingStudent) return 0;
     return 3 + subjectsWithGrades.length + 1;
   }, [printingStudent, subjectsWithGrades]);
+
+  const totalDocumentPages = useMemo(() => {
+    if (!printingStudent) return 0;
+    return totalPages + (coverEnabled ? 1 : 0);
+  }, [printingStudent, totalPages, coverEnabled]);
 
   const handleDownload = (studentId) => {
     setAutoDownload(true);
@@ -668,7 +998,7 @@ export default function Report() {
             <span className="text-gray-400">Titimangsa Cetak: </span>
             <span className="font-semibold text-primary-800">{currentPrintDate}</span>
           </div>
-          {['admin', 'coordinator', 'homeroom'].includes(currentUser?.role) && (
+          {currentUser?.role === 'admin' && (
             <Link
               to="/laporan/pengaturan-cetak"
               className="ml-2 px-2.5 py-1 text-[11px] font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-md transition-colors"
@@ -865,10 +1195,25 @@ export default function Report() {
           setAutoDownload(false);
         }}
         student={printingStudent}
-        totalPages={totalPages}
+        totalPages={totalDocumentPages}
         autoDownload={autoDownload}
         onPrint={() => window.print()}
       >
+        {/* Front Cover / Sampul Rapor */}
+        {coverEnabled && (
+          <FrontCoverPage
+            schoolProfile={schoolProfile}
+            student={printingStudent || { name: '', nis: '', class: '' }}
+            semester={activeSemester}
+            academicYear={activeYearStr}
+            gradeLevel={studentGradeLevel || 7}
+            homeroomTeacherName={homeroomTeacherName}
+            printDate={currentPrintDate}
+            ibProfileLogo={ibProfileLogo}
+            coverConfig={printSettings?.cover}
+          />
+        )}
+
         {/* Page 1: Cover Letter */}
         <CoverPage
           schoolProfile={schoolProfile}
@@ -877,6 +1222,7 @@ export default function Report() {
           academicYear={activeYearStr}
           pageNum={1}
           totalPages={totalPages}
+          coverLetter={coverLetter}
         />
 
         {/* Page 2: Guidelines */}
@@ -901,6 +1247,7 @@ export default function Report() {
           academicYear={activeYearStr}
           calculateGradeDynamic={calculateGradeDynamic}
           getLocalGrade={getLocalGrade}
+          showPresent={Boolean(printSettings?.showPresentInAttendance)}
           pageNum={3}
           totalPages={totalPages}
         />

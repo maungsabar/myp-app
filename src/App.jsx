@@ -23,6 +23,7 @@ import GradeProgress from './pages/GradeProgress';
 import CoordinatorDashboard from './pages/CoordinatorDashboard';
 import SchoolProfile from './pages/SchoolProfile';
 import IBLearnerProfile from './pages/IBLearnerProfile';
+import CoverLetter from './pages/CoverLetter';
 import AcademicYear from './pages/AcademicYear';
 import UserManagement from './pages/UserManagement';
 import BackupRestore from './pages/BackupRestore';
@@ -57,9 +58,10 @@ function App() {
             <Route path="/akademik/kehadiran" element={<ProtectedRoute allowedRoles={['/', '/akademik/kehadiran']}><Attendance /></ProtectedRoute>} />
             <Route path="/laporan/progres-nilai" element={<ProtectedRoute allowedRoles={['/', '/laporan/progres-nilai']}><GradeProgress /></ProtectedRoute>} />
             <Route path="/laporan/rapor" element={<ProtectedRoute allowedRoles={['/', '/laporan/rapor']}><Report /></ProtectedRoute>} />
-            <Route path="/laporan/pengaturan-cetak" element={<ProtectedRoute allowedRoles={['/', '/laporan/pengaturan-cetak']}><PrintSettings /></ProtectedRoute>} />
+            <Route path="/laporan/pengaturan-cetak" element={<ProtectedRoute allowedRoles={['/laporan/pengaturan-cetak']}><PrintSettings /></ProtectedRoute>} />
             <Route path="/pengaturan/profil-sekolah" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/profil-sekolah']}><SchoolProfile /></ProtectedRoute>} />
             <Route path="/pengaturan/profil-pembelajar-ib" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/profil-pembelajar-ib']}><IBLearnerProfile /></ProtectedRoute>} />
+            <Route path="/pengaturan/kata-pengantar" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/kata-pengantar']}><CoverLetter /></ProtectedRoute>} />
             <Route path="/pengaturan/tahun-pelajaran" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/tahun-pelajaran']}><AcademicYear /></ProtectedRoute>} />
             <Route path="/pengaturan/kelola-user" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/kelola-user']}><UserManagement /></ProtectedRoute>} />
             <Route path="/pengaturan/backup" element={<ProtectedRoute allowedRoles={['/', '/pengaturan/backup']}><BackupRestore /></ProtectedRoute>} />

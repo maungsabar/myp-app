@@ -18,8 +18,15 @@ export default function Attendance() {
     students, attendances, homeroomComments, activeYear,
     upsertAttendance, updateAttendance, upsertHomeroomComment, updateHomeroomComment,
     teachers, learnerProfiles, getSemesterLabel, currentUser,
-    classes, selectedAcademicYearId,
+    classes, selectedAcademicYearId, printSettings,
   } = useApp();
+
+  // Check if "Present" column is enabled in printSettings (default: false)
+  const showPresent = Boolean(printSettings?.showPresentInAttendance);
+  const visibleAttendanceFields = useMemo(
+    () => (showPresent ? ATTENDANCE_FIELDS : ATTENDANCE_FIELDS.filter(f => f.key !== 'present')),
+    [showPresent]
+  );
 
   // Daftar nama kelas dinamis dari database
   const classNames = useMemo(() => {
@@ -138,7 +145,7 @@ export default function Attendance() {
   };
 
   const getTotalDays = (studentId) => {
-    return ATTENDANCE_FIELDS.reduce((sum, f) => {
+    return visibleAttendanceFields.reduce((sum, f) => {
       const v = getAttendanceValue(studentId, f.key);
       return sum + (v === '' ? 0 : Number(v));
     }, 0);
@@ -327,8 +334,8 @@ export default function Attendance() {
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                       Data Kehadiran
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {ATTENDANCE_FIELDS.map(({ key, label, icon: Icon, color, bg, ring }) => (
+                    <div className={`grid gap-3 ${showPresent ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-1 sm:grid-cols-3'}`}>
+                      {visibleAttendanceFields.map(({ key, label, icon: Icon, color, bg, ring }) => (
                         <div key={key} className={`${bg} rounded-lg p-3`}>
                           <div className="flex items-center gap-1.5 mb-1.5">
                             <Icon size={14} className={color} />

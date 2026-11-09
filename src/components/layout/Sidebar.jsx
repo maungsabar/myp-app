@@ -59,6 +59,7 @@ const navGroups = [
     items: [
       { to: '/pengaturan/profil-sekolah', icon: School, label: 'Profil Sekolah' },
       { to: '/pengaturan/profil-pembelajar-ib', icon: Award, label: 'Profil Pembelajar IB' },
+      { to: '/pengaturan/kata-pengantar', icon: FileText, label: 'Kata Pengantar' },
       { to: '/pengaturan/tahun-pelajaran', icon: Calendar, label: 'Tahun Pelajaran' },
       { to: '/pengaturan/kelola-user', icon: UserCog, label: 'Kelola User' },
       { to: '/pengaturan/backup', icon: HardDrive, label: 'Backup & Restore' },
@@ -69,8 +70,8 @@ const navGroups = [
 // Role-based navigation access
 const ROLE_NAV = {
   admin: null, // null = access to everything
-  coordinator: ['/', '/master/mata-pelajaran', '/master/deskriptor', '/master/grade-boundaries', '/laporan/progres-nilai', '/laporan/rapor', '/laporan/pengaturan-cetak'],
-  homeroom: ['/', '/akademik/nilai', '/akademik/kehadiran', '/laporan/progres-nilai', '/laporan/rapor', '/laporan/pengaturan-cetak'],
+  coordinator: ['/', '/master/mata-pelajaran', '/master/deskriptor', '/master/grade-boundaries', '/laporan/progres-nilai', '/laporan/rapor'],
+  homeroom: ['/', '/akademik/nilai', '/akademik/kehadiran', '/laporan/progres-nilai', '/laporan/rapor'],
   subject: ['/', '/akademik/nilai'],
   student: ['/', '/laporan/rapor'],
 };

@@ -158,6 +158,8 @@ const api = {
   deleteIbProfileLogo: () => request('/settings/ib-profile-logo', { method: 'DELETE' }),
   getPrintSettings: () => request('/settings/printSettings'),
   savePrintSettings: (settings) => request('/settings/printSettings', { method: 'PUT', body: JSON.stringify({ value: settings }) }),
+  getCoverLetter: () => request('/settings/coverLetter'),
+  saveCoverLetter: (data) => request('/settings/coverLetter', { method: 'PUT', body: JSON.stringify({ value: data }) }),
 
   // ─── Grade Boundaries ──────────────────────────────────────────────
   getGradeBoundaries: () => request('/grade-boundaries'),
